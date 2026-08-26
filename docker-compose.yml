@@ -42,7 +42,11 @@ services:
         VITE_API_URL: ""
     restart: unless-stopped
     ports:
-      - "80:80"
+      # Bind to localhost only - your host-level nginx routes to this
+      # port, same pattern as your other client stacks. If this VPS
+      # will ONLY ever run this one app with no host nginx in front,
+      # change to "80:80" instead to publish it directly.
+      - "127.0.0.1:8081:80"
     depends_on:
       - backend
     networks:
