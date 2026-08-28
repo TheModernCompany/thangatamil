@@ -5,3 +5,5 @@ asyncpg
 psycopg2-binary
 python-dotenv
 pydantic
+email-validator
+python-multipart

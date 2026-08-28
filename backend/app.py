@@ -42,7 +42,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def ensure_database_exists():
     try:
-        default_url = "postgresql://postgres:accord@localhost:5432/postgres"
+        default_url = DATABASE_URL.rsplit("/", 1)[0] + "/postgres"
         engine_default = create_engine(default_url)
         
         with engine_default.connect() as conn:
