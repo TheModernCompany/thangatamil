@@ -27,7 +27,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // API Base URL - adjust based on your environment
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = '';
 
 interface ContactSubmission {
   id: string;

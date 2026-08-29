@@ -42,7 +42,7 @@ interface GalleryImage {
 }
 
 // Base URL for API
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = '';
 
 // Helper to get full image URL
 const getFullImageUrl = (url: string): string => {

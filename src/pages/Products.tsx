@@ -5,7 +5,7 @@ import { useCart, CartDrawer, ProductCardWithCart } from '../pages/ProductCart';
 import { useNavigate } from 'react-router-dom';
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = '';
 const API_URL = `${API_BASE_URL}/api`;
 
 // Helper function to get full image URL

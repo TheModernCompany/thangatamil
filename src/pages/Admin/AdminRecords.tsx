@@ -148,7 +148,7 @@ const AdminRecords: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [statsLoading, setStatsLoading] = useState(false);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '';
 
   // ============ Status Mapping ============
   const getBackendStatus = (status: string): string | undefined => {

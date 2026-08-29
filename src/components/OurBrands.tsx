@@ -19,7 +19,7 @@ interface OurBrandsProps {
 }
 
 const OurBrands: React.FC<OurBrandsProps> = ({ 
-  apiBaseUrl = 'http://localhost:8000',
+  apiBaseUrl = '',
   onError
 }) => {
   const [brands, setBrands] = useState<Brand[]>([]);

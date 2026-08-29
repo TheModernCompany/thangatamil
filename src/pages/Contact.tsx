@@ -5,7 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import backgroundImage from '../assets/Background_Image.png'; // Adjust path as needed
 
 // API Base URL - adjust based on your environment
-const API_BASE_URL =  'http://localhost:8000';
+const API_BASE_URL =  '';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
