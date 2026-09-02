@@ -483,7 +483,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheck
                                                 </button>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-sm font-bold text-gold-400">
+                                                <span className="text-sm font-bold text-amber-300">
                                                     {formatCurrency((item.discountedPrice || item.price) * item.quantity)}
                                                 </span>
                                                 {item.discount > 0 && (
@@ -516,7 +516,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheck
                                 )}
                                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-700">
                                     <span className="text-white">Total</span>
-                                    <span className="text-gold-400">{formatCurrency(getTotalPrice())}</span>
+                                    <span className="text-amber-300">{formatCurrency(getTotalPrice())}</span>
                                 </div>
                             </div>
 
@@ -647,7 +647,7 @@ export const ProductCardWithCart: React.FC<ProductCardWithCartProps> = ({
                 
                 {/* Price - Centered */}
                 <div className="flex items-center justify-center gap-2 mb-3">
-                    <span className="text-lg font-bold text-gold-400">
+                    <span className="text-lg font-bold text-amber-300">
                         {formatCurrency(product.discountedPrice || product.price)}
                     </span>
                     {product.discount > 0 && (

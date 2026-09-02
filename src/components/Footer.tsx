@@ -24,7 +24,7 @@ const Footer: React.FC = () => {
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
               Premium quality crackers and fireworks for all celebrations. 
-              Safety first, fun always. Since 1995.
+              Safety first, fun always. Since 2015.
             </p>
           </div>
 
@@ -94,14 +94,6 @@ const Footer: React.FC = () => {
         {/* Bottom bar */}
         <div className="border-t border-gray-800 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center text-gray-500 text-sm">
           <p>&copy; {new Date().getFullYear()} Thangatamil Crackers. All rights reserved.</p>
-          <div className="flex items-center gap-4 mt-2 md:mt-0">
-            <span className="flex items-center gap-1">
-              <span className="text-yellow-500">✦</span> Made with Safety
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="text-yellow-500">✦</span> ISO Certified
-            </span>
-          </div>
         </div>
       </div>
     </footer>

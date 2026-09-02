@@ -15,6 +15,17 @@ import chakkarsImg from '../assets/Premium fireworks display celebration essenti
 const ProductSection: React.FC = () => {
   // Product data with local images
   const navigate = useNavigate();
+
+  // Handle navigation with scroll to top
+  const handleNavigateToProducts = () => {
+    navigate('/products');
+    // Scroll to top after navigation
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth' // Smooth scrolling to top
+    });
+  };
+
   const products = [
     {
       id: 1,
@@ -106,14 +117,22 @@ const ProductSection: React.FC = () => {
         {/* Premium row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {products.slice(0, 3).map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              onNavigate={handleNavigateToProducts}
+            />
           ))}
         </div>
 
         {/* Second row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {products.slice(3).map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              onNavigate={handleNavigateToProducts}
+            />
           ))}
         </div>
       </div>
@@ -130,11 +149,10 @@ interface ProductCardProps {
     image: string;
     category?: string;
   };
+  onNavigate: () => void; // Added prop for navigation handler
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const navigate = useNavigate(); // Fixed: navigate is now defined here
-
+const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
   return (
     <div className="group relative bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/20 hover:scale-105">
       {/* Product image */}
@@ -158,7 +176,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {product.tagline}
         </p>
         <button
-          onClick={() => navigate('/products')}
+          onClick={onNavigate}
           className="inline-flex items-center text-yellow-400 font-semibold text-sm tracking-wide hover:text-yellow-300 transition-colors group-hover:gap-2 gap-1"
         >
           {product.cta}

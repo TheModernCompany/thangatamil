@@ -393,7 +393,13 @@ const UserRegister: React.FC = () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 
                 console.log('✅ Order placed successfully:', result);
-                console.log('📦 Order Number:', result.order?.orderNumber || 'N/A');
+                // ✅ FIXED: Get invoice number from response
+                const invoiceNumber = result?.order?.invoiceNumber || 
+                                     result?.order?.invoice_number || 
+                                     result?.invoiceNumber || 
+                                     result?.invoice_number || 
+                                     'N/A';
+                console.log('📄 Invoice Number:', invoiceNumber);
             }
         } catch (error: any) {
             if (isMounted.current) {
@@ -430,132 +436,163 @@ const UserRegister: React.FC = () => {
         });
     }, []);
 
-    const SuccessMessage = useCallback(() => (
-        <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-gold-500/30 p-8 md:p-12 text-center max-w-2xl mx-auto shadow-2xl shadow-gold-500/10">
-            {/* Celebration Particles */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                {celebrationParticles.map((particle) => {
-                    const uniqueKeyframes = `
-                        @keyframes particleBurst_${particle.id} {
-                            0% {
-                                opacity: 1;
-                                transform: translate(0, 0) scale(1) rotate(0deg);
-                            }
-                            100% {
-                                opacity: 0;
-                                transform: translate(${particle.translateX}px, ${particle.translateY}px) scale(0) rotate(720deg);
-                            }
-                        }
-                    `;
-                    
-                    return (
-                        <React.Fragment key={particle.id}>
-                            <style>{uniqueKeyframes}</style>
-                            <div
-                                className="particle"
-                                style={{
-                                    left: `${particle.x}%`,
-                                    top: `${particle.y}%`,
-                                    width: `${particle.size}px`,
-                                    height: `${particle.size}px`,
-                                    backgroundColor: particle.color,
-                                    animation: `particleBurst_${particle.id} ${particle.duration}s ease-out ${particle.delay}s forwards`,
-                                    transform: `rotate(${particle.rotation}deg)`,
-                                    boxShadow: `0 0 20px ${particle.color}40`,
-                                    borderRadius: '50%',
-                                    position: 'absolute',
-                                    pointerEvents: 'none',
-                                }}
-                            />
-                        </React.Fragment>
-                    );
-                })}
-            </div>
+    // ✅ FIXED: SuccessMessage component - NOW SHOWS INVOICE NUMBER
+    const SuccessMessage = useCallback(() => {
+        // ✅ Extract INVOICE NUMBER from order (not order number)
+        const invoiceNumber = orderDetails?.order?.invoiceNumber || 
+                              orderDetails?.order?.invoice_number || 
+                              orderDetails?.invoiceNumber || 
+                              orderDetails?.invoice_number || 
+                              null;
+        
+        // Also get order number as fallback
+        const orderNumber = orderDetails?.order?.orderNumber || 
+                            orderDetails?.order?.order_number || 
+                            orderDetails?.orderNumber || 
+                            orderDetails?.order_number || 
+                            null;
+        
+        const totalAmount = orderDetails?.order?.finalAmount || 
+                            orderDetails?.order?.final_amount || 
+                            orderDetails?.finalAmount || 
+                            orderDetails?.final_amount || 
+                            null;
 
-            <div className="relative z-10">
-                <div className="text-7xl md:text-8xl mb-6 bounce-slow">
-                    🎉
+        const isRegistration = orderDetails?.isRegistration || false;
+
+        // Determine which number to display - prefer invoice number
+        const displayNumber = invoiceNumber || orderNumber;
+
+        return (
+            <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-gold-500/30 p-8 md:p-12 text-center max-w-2xl mx-auto shadow-2xl shadow-gold-500/10">
+                {/* Celebration Particles */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {celebrationParticles.map((particle) => {
+                        const uniqueKeyframes = `
+                            @keyframes particleBurst_${particle.id} {
+                                0% {
+                                    opacity: 1;
+                                    transform: translate(0, 0) scale(1) rotate(0deg);
+                                }
+                                100% {
+                                    opacity: 0;
+                                    transform: translate(${particle.translateX}px, ${particle.translateY}px) scale(0) rotate(720deg);
+                                }
+                            }
+                        `;
+                        
+                        return (
+                            <React.Fragment key={particle.id}>
+                                <style>{uniqueKeyframes}</style>
+                                <div
+                                    className="particle"
+                                    style={{
+                                        left: `${particle.x}%`,
+                                        top: `${particle.y}%`,
+                                        width: `${particle.size}px`,
+                                        height: `${particle.size}px`,
+                                        backgroundColor: particle.color,
+                                        animation: `particleBurst_${particle.id} ${particle.duration}s ease-out ${particle.delay}s forwards`,
+                                        transform: `rotate(${particle.rotation}deg)`,
+                                        boxShadow: `0 0 20px ${particle.color}40`,
+                                        borderRadius: '50%',
+                                        position: 'absolute',
+                                        pointerEvents: 'none',
+                                    }}
+                                />
+                            </React.Fragment>
+                        );
+                    })}
                 </div>
 
-                <div className="flex justify-center gap-3 mb-6">
-                    <span className="text-4xl float-animation" style={{ animationDelay: '0s' }}>✨</span>
-                    <span className="text-4xl float-animation" style={{ animationDelay: '0.3s' }}>🎆</span>
-                    <span className="text-4xl float-animation" style={{ animationDelay: '0.6s' }}>🎇</span>
-                    <span className="text-4xl float-animation" style={{ animationDelay: '0.9s' }}>🌟</span>
-                    <span className="text-4xl float-animation" style={{ animationDelay: '1.2s' }}>🎊</span>
-                </div>
-
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                    Thank You, <span className="text-gold-400">{formData.name}</span>!
-                </h2>
-
-                {orderDetails && orderDetails.order && (
-                    <div className="bg-gold-500/10 border border-gold-500/20 rounded-xl p-4 mb-4">
-                        <p className="text-gray-300 text-sm">
-                            Order Number: <span className="text-gold-400 font-bold">{orderDetails.order.orderNumber}</span>
-                        </p>
-                        <p className="text-gray-400 text-xs mt-1">
-                            Total Amount: <span className="text-white font-medium">₹{orderDetails.order.totalAmount}</span>
-                        </p>
+                <div className="relative z-10">
+                    <div className="text-7xl md:text-8xl mb-6 bounce-slow">
+                        🎉
                     </div>
-                )}
 
-                {orderDetails && orderDetails.isRegistration && (
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 mb-4">
-                        <p className="text-gray-300 text-sm">
-                            ✅ {orderDetails.message || 'Registration completed successfully!'}
-                        </p>
+                    <div className="flex justify-center gap-3 mb-6">
+                        <span className="text-4xl float-animation" style={{ animationDelay: '0s' }}>✨</span>
+                        <span className="text-4xl float-animation" style={{ animationDelay: '0.3s' }}>🎆</span>
+                        <span className="text-4xl float-animation" style={{ animationDelay: '0.6s' }}>🎇</span>
+                        <span className="text-4xl float-animation" style={{ animationDelay: '0.9s' }}>🌟</span>
+                        <span className="text-4xl float-animation" style={{ animationDelay: '1.2s' }}>🎊</span>
                     </div>
-                )}
 
-                {orderDetails && orderDetails.message && !orderDetails.isRegistration && (
-                    <div className="bg-gold-500/10 border border-gold-500/20 rounded-xl p-4 mb-4">
-                        <p className="text-gray-300 text-sm">
-                            {orderDetails.message}
-                        </p>
-                    </div>
-                )}
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                        Thank You, <span className="text-gold-400">{formData.name}</span>!
+                    </h2>
 
-                <div className="bg-gold-500/10 border border-gold-500/20 rounded-xl p-6 mb-6">
-                    {orderDetails && orderDetails.order && !orderDetails.isRegistration ? (
-                        <>
-                            <p className="text-gray-300 text-lg leading-relaxed">
-                                We've received your order and will get back to you within{' '}
-                                <span className="text-gold-400 font-bold">24 hours</span>.
+                    {/* ✅ FIXED: Display INVOICE NUMBER */}
+                    {displayNumber && !isRegistration && (
+                        <div className="bg-gold-500/10 border border-gold-500/20 rounded-xl p-4 mb-4">
+                            <p className="text-gray-300 text-sm">
+                                Invoice Number: <span className="text-gold-400 font-bold">{displayNumber}</span>
                             </p>
-                            <p className="text-gray-400 text-sm mt-3">
-                                📞 We'll contact you at <span className="text-white">{formData.contact}</span>
-                            </p>
-                        </>
-                    ) : (
-                        <>
-                            <p className="text-gray-300 text-lg leading-relaxed">
-                                Your registration has been completed successfully!
-                            </p>
-                            <p className="text-gray-400 text-sm mt-3">
-                                📞 We'll contact you at <span className="text-white">{formData.contact}</span>
-                            </p>
-                        </>
+                            {totalAmount && (
+                                <p className="text-gray-400 text-xs mt-1">
+                                    Total Amount: <span className="text-white font-medium">₹{totalAmount}</span>
+                                </p>
+                            )}
+                        </div>
                     )}
-                </div>
 
-                <div className="flex flex-wrap justify-center gap-4">
-                    <button
-                        onClick={handleReset}
-                        className="px-8 py-3 bg-gold-500 text-black font-semibold rounded-xl hover:bg-gold-400 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-gold-500/30"
-                    >
-                        🛍️ Continue Shopping
-                    </button>
-                    <button
-                        onClick={() => navigate('/')}
-                        className="px-8 py-3 border border-gray-600 text-gray-300 font-semibold rounded-xl hover:bg-gray-800 transition-all duration-300"
-                    >
-                        🏠 Go to Home
-                    </button>
+                    {isRegistration && (
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 mb-4">
+                            <p className="text-gray-300 text-sm">
+                                ✅ {orderDetails?.message || 'Registration completed successfully!'}
+                            </p>
+                        </div>
+                    )}
+
+                    {orderDetails?.message && !isRegistration && !displayNumber && (
+                        <div className="bg-gold-500/10 border border-gold-500/20 rounded-xl p-4 mb-4">
+                            <p className="text-gray-300 text-sm">
+                                {orderDetails.message}
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="bg-gold-500/10 border border-gold-500/20 rounded-xl p-6 mb-6">
+                        {displayNumber && !isRegistration ? (
+                            <>
+                                <p className="text-gray-300 text-lg leading-relaxed">
+                                    We've received your order <span className="text-gold-400 font-bold">#{displayNumber}</span> and will get back to you within{' '}
+                                    <span className="text-gold-400 font-bold">24 hours</span>.
+                                </p>
+                                <p className="text-gray-400 text-sm mt-3">
+                                    📞 We'll contact you at <span className="text-white">{formData.contact}</span>
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-gray-300 text-lg leading-relaxed">
+                                    Your registration has been completed successfully!
+                                </p>
+                                <p className="text-gray-400 text-sm mt-3">
+                                    📞 We'll contact you at <span className="text-white">{formData.contact}</span>
+                                </p>
+                            </>
+                        )}
+                    </div>
+
+                    <div className="flex flex-wrap justify-center gap-4">
+                        <button
+                            onClick={handleReset}
+                            className="px-8 py-3 bg-gold-500 text-black font-semibold rounded-xl hover:bg-gold-400 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-gold-500/30"
+                        >
+                            🛍️ Continue Shopping
+                        </button>
+                        <button
+                            onClick={() => navigate('/')}
+                            className="px-8 py-3 border border-gray-600 text-gray-300 font-semibold rounded-xl hover:bg-gray-800 transition-all duration-300"
+                        >
+                            🏠 Go to Home
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    ), [celebrationParticles, formData.name, formData.contact, orderDetails, handleReset, navigate]);
+        );
+    }, [celebrationParticles, formData.name, formData.contact, orderDetails, handleReset, navigate]);
 
     // Memoized registration form
     const RegistrationForm = useMemo(() => (
@@ -693,7 +730,7 @@ const UserRegister: React.FC = () => {
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-4 bg-gold-500 text-black font-bold rounded-xl hover:bg-gold-400 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-gold-500/20 hover:shadow-gold-500/40 disabled:opacity-70 disabled:cursor-not-allowed text-lg"
+                    className="w-full py-4 bg-gold-500 text-white font-bold rounded-xl hover:bg-gold-400 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-gold-500/20 hover:shadow-gold-500/40 disabled:opacity-70 disabled:cursor-not-allowed text-lg"
                 >
                     {isSubmitting ? (
                         <>

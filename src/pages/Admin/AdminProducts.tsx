@@ -64,14 +64,26 @@ const LoadingSpinner = () => (
     </div>
 );
 
-// Category options
+// ============ UPDATED CATEGORY OPTIONS ============
 const CATEGORIES = [
-    'FLOWERPOTS',
-    'ROCKETS',
-    'SPARKLERS',
-    'GROUND',
-    'ATOM BOMBSKID\'S SPECIAL',
-    'CHAKKARS'
+    'One Sound',
+    'Paper Bomb',
+    'Bijili',
+    'Bombs',
+    'Pencil',
+    'Twinkle Star',
+    'Rockets',
+    'Match Box',
+    'Flower Pot',
+    'Ground Chakkar',
+    'Peacock',
+    'Kids Special',
+    '2026 Special',
+    'Fancy Pipes',
+    'Multicolour Shot',
+    'Sparkles',
+    'Wala',
+    'Gift Boxes'
 ];
 
 interface Product {
@@ -507,15 +519,27 @@ const AdminProducts: React.FC = () => {
         }).format(amount);
     };
 
-    // Get category color (premium theme)
+    // ============ UPDATED CATEGORY COLORS ============
     const getCategoryColor = (category: string) => {
         const colors: { [key: string]: string } = {
-            'FLOWERPOTS': 'bg-green-500/20 text-green-400 border-green-500/30',
-            'ROCKETS': 'bg-red-500/20 text-red-400 border-red-500/30',
-            'SPARKLERS': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-            'GROUND': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-            'ATOM BOMBSKID\'S SPECIAL': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-            'CHAKKARS': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
+            'One Sound': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+            'Paper Bomb': 'bg-red-500/20 text-red-400 border-red-500/30',
+            'Bijili': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+            'Bombs': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+            'Pencil': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+            'Twinkle Star': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+            'Rockets': 'bg-green-500/20 text-green-400 border-green-500/30',
+            'Match Box': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+            'Flower Pot': 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+            'Ground Chakkar': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+            'Peacock': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
+            'Kids Special': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+            '2026 Special': 'bg-gold-500/20 text-gold-400 border-gold-500/30',
+            'Fancy Pipes': 'bg-lime-500/20 text-lime-400 border-lime-500/30',
+            'Multicolour Shot': 'bg-violet-500/20 text-violet-400 border-violet-500/30',
+            'Sparkles': 'bg-amber-400/20 text-amber-400 border-amber-400/30',
+            'Wala': 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+            'Gift Boxes': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
         };
         return colors[category] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     };
@@ -626,9 +650,6 @@ const AdminProducts: React.FC = () => {
             <div className="relative z-10 max-w-7xl mx-auto">
                 {/* Header with Add Button */}
                 <div className="text-center mb-6 sm:mb-10">
-                    <div className="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-500/20 rounded-full px-3 sm:px-4 py-1 sm:py-1.5 mb-3 sm:mb-4">
-                        <span className="text-[10px] sm:text-xs font-medium text-gold-400 uppercase tracking-wider">Admin Panel</span>
-                    </div>
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                         <div className="flex-1 text-center sm:text-left">
                             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">
@@ -637,9 +658,6 @@ const AdminProducts: React.FC = () => {
                             <div className="mt-2 sm:mt-3 flex justify-center sm:justify-start">
                                 <div className="w-16 sm:w-20 h-1 bg-gradient-to-r from-transparent via-gold-400 to-transparent rounded-full" />
                             </div>
-                            <p className="text-gray-400 mt-2 sm:mt-4 max-w-2xl text-xs sm:text-sm">
-                                Manage your product catalog. Add, edit, and organize products with ease.
-                            </p>
                         </div>
                         {/* ADD PRODUCT BUTTON - Responsive */}
                         <button

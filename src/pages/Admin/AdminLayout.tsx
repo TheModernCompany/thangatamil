@@ -31,7 +31,10 @@ import {
   FiArrowDown,
   FiStar,
   FiToggleLeft,
-  FiToggleRight
+  FiToggleRight,
+  FiMenu,
+  FiMoreVertical,
+  FiLogOut // Added logout icon
 } from 'react-icons/fi';
 import AdminDashboard from './AdminDashboard';
 import AdminProducts from './AdminProducts';
@@ -72,6 +75,7 @@ const AdminLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activePage, setActivePage] = useState('dashboard');
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Brand Management States
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -99,6 +103,13 @@ const AdminLayout: React.FC = () => {
   const [selectedAdsForBulk, setSelectedAdsForBulk] = useState<string[]>([]);
   const [deletingAdId, setDeletingAdId] = useState<string | null>(null);
 
+  // Add this state for admin info (you can fetch from your auth system)
+  const [adminUser, setAdminUser] = useState({
+    name: 'THANGATAMIL CRACKERS',
+    email: 'thangatamil@gmail.com',
+    initials: 'TT'
+  });
+
   const navItems = [
     { id: 'dashboard', icon: FiHome, label: 'Dashboard' },
     { id: 'products', icon: FiPackage, label: 'Products' },
@@ -111,6 +122,43 @@ const AdminLayout: React.FC = () => {
     { id: 'photos', icon: FiImage, label: 'Photos' },
     { id: 'records', icon: FiClipboard, label: 'Registers' },
   ];
+
+  // ============ Logout Function ============
+  const handleLogout = async () => {
+    // Show confirmation dialog
+    if (!confirm('Are you sure you want to logout?')) return;
+
+    try {
+      // If you have a logout API endpoint, call it here
+      // await axios.post(`${API_BASE_URL}/api/logout`);
+      
+      // Clear any stored auth tokens
+      localStorage.removeItem('token');
+      localStorage.removeItem('adminUser');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('adminUser');
+      
+      // Clear any other stored data
+      // localStorage.clear(); // Use with caution - this clears all localStorage
+      
+      // Show success notification
+      showNotification('success', 'Logged out successfully!');
+      
+      // Redirect to login page
+      // Option 1: Using window.location
+      window.location.href = '/admin-login';
+      
+      // Option 2: If you're using react-router
+      // navigate('/login');
+      
+      // Option 3: If you have a custom auth context
+      // logoutUser(); // Call your logout function from context
+      
+    } catch (error) {
+      console.error('Error during logout:', error);
+      showNotification('error', 'Failed to logout. Please try again.');
+    }
+  };
 
   // ============ Brand Management Functions ============
 
@@ -581,6 +629,8 @@ const AdminLayout: React.FC = () => {
 
   const handlePageChange = (pageId: string) => {
     setActivePage(pageId);
+    // Close mobile menu when a page is selected
+    setMobileMenuOpen(false);
   };
 
   // Render Brand Logo Page
@@ -1419,11 +1469,81 @@ const AdminLayout: React.FC = () => {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-gold-500/5 rounded-full blur-3xl" />
       </div>
 
-      {/* Sidebar */}
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Menu Drawer */}
+      <div className={`
+        fixed top-0 left-0 h-full w-64 bg-gray-900/95 border-r border-gray-800 z-50
+        transform transition-transform duration-300 ease-in-out lg:hidden
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gold-500 rounded-lg flex items-center justify-center text-black font-bold">
+              A
+            </div>
+            <span className="text-xl font-semibold tracking-tight text-white">Admin</span>
+          </div>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+          >
+            <FiX className="w-5 h-5" />
+          </button>
+        </div>
+
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto h-[calc(100%-80px)]">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handlePageChange(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  activePage === item.id
+                    ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                <Icon className={`text-xl ${activePage === item.id ? 'text-gold-400' : ''}`} />
+                <span className="font-medium">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Mobile Logout Button */}
+        <div className="p-4 border-t border-gray-800">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 border border-red-500/20 hover:border-red-500/40"
+          >
+            <FiLogOut className="text-xl" />
+            <span className="font-medium">Logout</span>
+          </button>
+          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-800/50">
+            <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 font-semibold border border-gold-500/30">
+              {adminUser.initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">{adminUser.name}</p>
+              <p className="text-xs text-gray-400 truncate">{adminUser.email}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sidebar - Desktop */}
       <aside
-        className={`bg-gray-900/90 border-r border-gray-800 text-white transition-all duration-300 ${
+        className={`hidden lg:flex bg-gray-900/90 border-r border-gray-800 text-white transition-all duration-300 ${
           sidebarOpen ? 'w-64' : 'w-20'
-        } flex flex-col shadow-xl relative z-10`}
+        } flex-col shadow-xl relative z-10`}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
           <div className="flex items-center gap-2">
@@ -1466,15 +1586,28 @@ const AdminLayout: React.FC = () => {
           })}
         </nav>
 
+        {/* Desktop Logout Button */}
         <div className="p-4 border-t border-gray-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 font-semibold border border-gold-500/30">
-              JD
+          <button
+            onClick={handleLogout}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 border border-red-500/20 hover:border-red-500/40 ${
+              !sidebarOpen ? 'justify-center' : ''
+            }`}
+          >
+            <FiLogOut className="text-xl" />
+            {sidebarOpen && <span className="font-medium">Logout</span>}
+          </button>
+          
+          <div className={`flex items-center gap-3 mt-3 pt-3 border-t border-gray-800/50 ${
+            !sidebarOpen ? 'justify-center' : ''
+          }`}>
+            <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 font-semibold border border-gold-500/30 flex-shrink-0">
+              {adminUser.initials}
             </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">John Doe</p>
-                <p className="text-xs text-gray-400 truncate">admin@example.com</p>
+                <p className="text-sm font-medium text-white truncate">{adminUser.name}</p>
+                <p className="text-xs text-gray-400 truncate">{adminUser.email}</p>
               </div>
             )}
           </div>
@@ -1483,29 +1616,51 @@ const AdminLayout: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
-        <header className="bg-gray-900/80 border-b border-gray-800 px-6 py-4 flex items-center justify-between backdrop-blur-sm">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-semibold text-white capitalize">
+        <header className="bg-gray-900/80 border-b border-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between backdrop-blur-sm">
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+            >
+              <FiMenu className="w-5 h-5" />
+            </button>
+            <h1 className="text-lg sm:text-xl font-semibold text-white capitalize">
               {activePage === 'register' ? 'User Register' : 
                activePage === 'brandlogo' ? 'Brand Logo' :
                activePage === 'scrollingads' ? 'Scrolling Ads' :
                activePage === 'orders' ? 'Orders' : activePage}
             </h1>
-            <span className="text-sm text-gold-400 bg-gold-500/10 border border-gold-500/20 px-3 py-1 rounded-full">
+            <span className="hidden sm:inline-block text-sm text-gold-400 bg-gold-500/10 border border-gold-500/20 px-3 py-1 rounded-full">
               Admin Panel
             </span>
           </div>
-          <div className="flex items-center gap-4">
-            <button className="p-2 rounded-full hover:bg-gray-800 transition-colors text-gray-400 hover:text-white">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Mobile Logout Button in Header */}
+            <button
+              onClick={handleLogout}
+              className="lg:hidden p-2 rounded-lg hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors border border-red-500/20 hover:border-red-500/40"
+              title="Logout"
+            >
+              <FiLogOut className="w-5 h-5" />
+            </button>
+            
+            {/* Desktop Notifications */}
+            <button className="hidden sm:flex p-2 rounded-full hover:bg-gray-800 transition-colors text-gray-400 hover:text-white">
               <FiBell className="w-5 h-5" />
             </button>
-            <button className="p-2 rounded-full hover:bg-gray-800 transition-colors text-gray-400 hover:text-white">
+            <button className="hidden sm:flex p-2 rounded-full hover:bg-gray-800 transition-colors text-gray-400 hover:text-white">
               <FiUser className="w-5 h-5" />
+            </button>
+            
+            {/* Mobile More options button */}
+            <button className="lg:hidden p-2 rounded-full hover:bg-gray-800 transition-colors text-gray-400 hover:text-white">
+              <FiMoreVertical className="w-5 h-5" />
             </button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 bg-black">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-6 bg-black">
           {renderPageContent()}
         </main>
       </div>

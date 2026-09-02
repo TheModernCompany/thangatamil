@@ -1287,7 +1287,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                                 <h2 className="text-2xl md:text-3xl font-bold text-white">
                                     Order Details
                                 </h2>
-                                <p className="text-gray-400 text-sm mt-1">
+                                <p className="text-orange-400 text-sm mt-1">
                                     Invoice #{order.invoiceNumber || order.orderNumber} placed on {new Date(order.createdAt).toLocaleDateString('en-IN', {
                                         day: '2-digit',
                                         month: 'short',
@@ -1510,7 +1510,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                                                                 <span className="text-gray-500">—</span>
                                                             )}
                                                         </td>
-                                                        <td className="px-4 py-3 text-sm font-bold text-gold-400">
+                                                        <td className="px-4 py-3 text-sm font-bold text-amber-300">
                                                             {formatCurrency((item.discountedUnitPrice || item.unitPrice) * item.quantity)}
                                                         </td>
                                                     </tr>
@@ -1579,7 +1579,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                                             <p className="text-xs text-gray-400 uppercase tracking-wider">
                                                 {additionalDiscount > 0 ? 'Final Amount (After All Discounts)' : 'Total Amount'}
                                             </p>
-                                            <p className="text-3xl font-bold text-gold-400 mt-1">
+                                            <p className="text-3xl font-bold text-amber-300 mt-1">
                                                 {formatCurrency(finalTotal)}
                                             </p>
                                             {additionalDiscount > 0 && (
@@ -2450,9 +2450,6 @@ const AdminUsers: React.FC = () => {
             <div className="relative z-10 max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-6 md:mb-10">
-                    <div className="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-500/20 rounded-full px-4 py-1.5 mb-3 md:mb-4">
-                        <span className="text-xs font-medium text-gold-400 uppercase tracking-wider">Admin Panel</span>
-                    </div>
                     <h1 className="text-3xl md:text-5xl font-bold text-white">
                         All <span className="text-gold-400">Orders</span>
                     </h1>

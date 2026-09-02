@@ -1120,7 +1120,7 @@ const AdminRegister: React.FC = () => {
                     Additional Discount (%)
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="additionalDiscount"
                     value={editingUser.additionalDiscount}
                     onChange={handleEditInputChange}

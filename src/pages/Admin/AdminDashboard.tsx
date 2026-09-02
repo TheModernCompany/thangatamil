@@ -472,10 +472,6 @@ const AdminDashboard: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <div>
-            <div className="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-500/20 rounded-full px-4 py-1.5 mb-2">
-              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-              <span className="text-xs font-medium text-gold-400 uppercase tracking-wider">Live Dashboard</span>
-            </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white">
               Welcome Back, <span className="text-gold-400">Admin</span>
             </h1>
@@ -637,32 +633,6 @@ const AdminDashboard: React.FC = () => {
                   <span className="text-sm text-gray-400">Active Products</span>
                   <span className="text-sm font-medium text-amber-400">{stats.activeProducts}</span>
                 </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-6">
-              <h4 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                <FiSettings className="w-4 h-4 text-gold-400" />
-                Quick Actions
-              </h4>
-              <div className="grid grid-cols-2 gap-2">
-                <button className="p-3 bg-gray-800/50 hover:bg-gray-800 rounded-xl text-center transition-all group border border-gray-700 hover:border-gold-500/30">
-                  <div className="text-2xl mb-1">📦</div>
-                  <p className="text-xs text-gray-400 group-hover:text-white transition-colors">Add Product</p>
-                </button>
-                <button className="p-3 bg-gray-800/50 hover:bg-gray-800 rounded-xl text-center transition-all group border border-gray-700 hover:border-gold-500/30">
-                  <div className="text-2xl mb-1">🧾</div>
-                  <p className="text-xs text-gray-400 group-hover:text-white transition-colors">New Bill</p>
-                </button>
-                <button className="p-3 bg-gray-800/50 hover:bg-gray-800 rounded-xl text-center transition-all group border border-gray-700 hover:border-gold-500/30">
-                  <div className="text-2xl mb-1">👤</div>
-                  <p className="text-xs text-gray-400 group-hover:text-white transition-colors">Add User</p>
-                </button>
-                <button className="p-3 bg-gray-800/50 hover:bg-gray-800 rounded-xl text-center transition-all group border border-gray-700 hover:border-gold-500/30">
-                  <div className="text-2xl mb-1">📊</div>
-                  <p className="text-xs text-gray-400 group-hover:text-white transition-colors">Report</p>
-                </button>
               </div>
             </div>
           </div>
@@ -837,17 +807,7 @@ const AdminDashboard: React.FC = () => {
               <div className="bg-gray-800/50 rounded-xl p-4 mb-4">
                 <p className="text-gray-300">{selectedActivity.description}</p>
               </div>
-              {selectedActivity.link && (
-                <button
-                  onClick={() => {
-                    setShowActivityModal(false);
-                    // Navigate to the link
-                  }}
-                  className="w-full py-2.5 bg-gold-500 text-black rounded-xl hover:bg-gold-400 transition-all duration-300 font-medium text-sm"
-                >
-                  View Details
-                </button>
-              )}
+              
             </div>
           </div>
         </>

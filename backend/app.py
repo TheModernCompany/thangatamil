@@ -1116,12 +1116,10 @@ async def get_categories():
     """Get all product categories"""
     return {
         "categories": [
-            "FLOWERPOTS",
-            "ROCKETS",
-            "SPARKLERS",
-            "GROUND",
-            "ATOM BOMBSKID'S SPECIAL",
-            "CHAKKARS"
+            "One Sound", "Paper Bomb", "Bijili", "Bombs", "Pencil",
+            "Twinkle Star", "Rockets", "Match Box", "Flower Pot",
+            "Ground Chakkar", "Peacock", "Kids Special", "2026 Special",
+            "Fancy Pipes", "Multicolour Shot", "Sparkles", "Wala", "Gift Boxes"
         ]
     }
 

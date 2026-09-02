@@ -13,18 +13,30 @@ Base = declarative_base()
 IST = timezone(timedelta(hours=5, minutes=30))
 
 def get_ist_now():
-    """Get current time in IST (Indian Standard Time UTC+5:30)"""
-    return datetime.now(IST)
+    """Get current time in IST (Indian Standard Time UTC+5:30), as a naive datetime"""
+    return datetime.now(IST).replace(tzinfo=None)
 
 # ============ Enums ============
 
 class ProductCategory(str, enum.Enum):
-    FLOWERPOTS = "FLOWERPOTS"
-    ROCKETS = "ROCKETS"
-    SPARKLERS = "SPARKLERS"
-    GROUND = "GROUND"
-    ATOM_BOMBSKIDS_SPECIAL = "ATOM BOMBSKID'S SPECIAL"
-    CHAKKARS = "CHAKKARS"
+    ONE_SOUND = "One Sound"
+    PAPER_BOMB = "Paper Bomb"
+    BIJILI = "Bijili"
+    BOMBS = "Bombs"
+    PENCIL = "Pencil"
+    TWINKLE_STAR = "Twinkle Star"
+    ROCKETS = "Rockets"
+    MATCH_BOX = "Match Box"
+    FLOWER_POT = "Flower Pot"
+    GROUND_CHAKKAR = "Ground Chakkar"
+    PEACOCK = "Peacock"
+    KIDS_SPECIAL = "Kids Special"
+    YEAR_2026_SPECIAL = "2026 Special"
+    FANCY_PIPES = "Fancy Pipes"
+    MULTICOLOUR_SHOT = "Multicolour Shot"
+    SPARKLES = "Sparkles"
+    WALA = "Wala"
+    GIFT_BOXES = "Gift Boxes"
 
 class OrderStatus(str, enum.Enum):
     """Order status enum - values must match database enum exactly"""

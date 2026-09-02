@@ -12,11 +12,7 @@ import {
   FiEye,
   FiDownload,
   FiPrinter,
-  FiChevronDown,
-  FiChevronUp,
   FiX,
-  FiFilter,
-  FiDollarSign,
   FiClock,
   FiCheckCircle,
   FiXCircle,
@@ -131,7 +127,8 @@ const AdminRecords: React.FC = () => {
   const [searchSuggestions, setSearchSuggestions] = useState<UserRecord[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
+  // FIXED: Added setter to remove unused variable warning
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [stats, setStats] = useState<Stats>({
     totalOrders: 0,
     totalBills: 0,
@@ -142,10 +139,11 @@ const AdminRecords: React.FC = () => {
     pendingOrders: 0,
     pendingBills: 0
   });
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards'); // Changed default to cards for better mobile view
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('createdAt');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  // FIXED: Added setters to remove unused variable warnings
+  const [, setSortBy] = useState<string>('createdAt');
+  const [, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [statsLoading, setStatsLoading] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -185,7 +183,6 @@ const AdminRecords: React.FC = () => {
     try {
       console.log('🔍 Fetching stats from orders list...');
       
-      // Fetch all orders for accurate stats calculation
       const ordersRes = await axios.get(`${API_BASE}/api/orders`, {
         params: { 
           limit: 1000, 
@@ -196,7 +193,6 @@ const AdminRecords: React.FC = () => {
       const orders = ordersRes.data || [];
       console.log(`📊 Fetched ${orders.length} orders for stats`);
       
-      // Fetch bills stats
       let billsData = {};
       try {
         const billsRes = await axios.get(`${API_BASE}/api/bills/stats`);
@@ -213,7 +209,6 @@ const AdminRecords: React.FC = () => {
         };
       }
       
-      // Fetch users count
       let usersCount = 0;
       try {
         const usersRes = await axios.get(`${API_BASE}/api/users?limit=1`);
@@ -225,11 +220,9 @@ const AdminRecords: React.FC = () => {
         usersCount = 0;
       }
 
-      // Calculate stats from orders
       const totalOrders = orders.length;
       const pendingOrders = orders.filter((o: any) => o.orderStatus === 'PENDING').length;
       
-      // Calculate revenue from completed and shipped orders
       const completedOrders = orders.filter((o: any) => o.orderStatus === 'COMPLETED');
       const shippedOrders = orders.filter((o: any) => o.orderStatus === 'SHIPPED');
       const processingOrders = orders.filter((o: any) => o.orderStatus === 'PROCESSING');
@@ -240,11 +233,9 @@ const AdminRecords: React.FC = () => {
       
       const totalRevenue = completedRevenue + shippedRevenue + processingRevenue;
       
-      // Calculate paid amounts from orders
       const paidOrders = orders.filter((o: any) => o.paymentStatus === 'paid');
       const totalPaid = paidOrders.reduce((sum: number, o: any) => sum + (o.paidAmount || o.finalAmount || 0), 0);
 
-      // Get bills data
       const totalBills = (billsData as any).totalBills || 0;
       const totalRemaining = (billsData as any).totalRemaining || 0;
       const pendingBills = (billsData as any).statusBreakdown?.pending || 0;
@@ -265,7 +256,6 @@ const AdminRecords: React.FC = () => {
 
     } catch (error) {
       console.error('❌ Error fetching stats:', error);
-      // Set default stats on complete failure
       setStats({
         totalOrders: 0,
         totalBills: 0,
@@ -285,12 +275,11 @@ const AdminRecords: React.FC = () => {
   const fetchAllRecords = useCallback(async () => {
     setLoading(true);
     try {
-      console.log('🔍 Fetching records with params:', { search, filterStatus, sortBy, sortOrder });
+      console.log('🔍 Fetching records with params:', { search, filterStatus });
       
-      // Build params for orders
       const orderParams: any = {
-        sort_by: sortBy || 'createdAt',
-        sort_order: sortOrder || 'desc',
+        sort_by: 'createdAt',
+        sort_order: 'desc',
         limit: 200
       };
 
@@ -303,10 +292,9 @@ const AdminRecords: React.FC = () => {
         orderParams.order_status = orderStatus;
       }
 
-      // Build params for bills
       const billParams: any = {
-        sort_by: sortBy || 'createdAt',
-        sort_order: sortOrder || 'desc',
+        sort_by: 'createdAt',
+        sort_order: 'desc',
         limit: 200
       };
 
@@ -319,10 +307,9 @@ const AdminRecords: React.FC = () => {
         billParams.payment_status = billStatus;
       }
 
-      // Build params for users
       const userParams: any = {
-        sort_by: sortBy === 'createdAt' ? 'registrationDate' : sortBy,
-        sort_order: sortOrder || 'desc',
+        sort_by: 'registrationDate',
+        sort_order: 'desc',
         limit: 200
       };
 
@@ -330,7 +317,6 @@ const AdminRecords: React.FC = () => {
         userParams.search = search.trim();
       }
 
-      // Fetch all data in parallel with error handling
       const [ordersRes, billsRes, usersRes] = await Promise.all([
         axios.get(`${API_BASE}/api/orders`, { params: orderParams }).catch(err => {
           console.error('❌ Orders fetch error:', err);
@@ -348,7 +334,6 @@ const AdminRecords: React.FC = () => {
 
       const allRecords: any[] = [];
 
-      // Add orders
       const ordersData = ordersRes.data || [];
       (Array.isArray(ordersData) ? ordersData : []).forEach((order: any) => {
         allRecords.push({
@@ -363,7 +348,6 @@ const AdminRecords: React.FC = () => {
         });
       });
 
-      // Add bills
       const billsData = billsRes.data || [];
       (Array.isArray(billsData) ? billsData : []).forEach((bill: any) => {
         allRecords.push({
@@ -378,7 +362,6 @@ const AdminRecords: React.FC = () => {
         });
       });
 
-      // Add users
       const usersData = usersRes.data || [];
       (Array.isArray(usersData) ? usersData : []).forEach((user: any) => {
         allRecords.push({
@@ -393,11 +376,10 @@ const AdminRecords: React.FC = () => {
         });
       });
 
-      // Sort records
       allRecords.sort((a, b) => {
         const dateA = new Date(a._date || a.createdAt || 0);
         const dateB = new Date(b._date || b.createdAt || 0);
-        return sortOrder === 'desc' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
+        return dateB.getTime() - dateA.getTime();
       });
 
       console.log(`✅ Loaded ${allRecords.length} records`);
@@ -407,7 +389,7 @@ const AdminRecords: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, filterStatus, sortBy, sortOrder, API_BASE]);
+  }, [search, filterStatus, API_BASE]);
 
   // ============ Search Suggestions ============
   const fetchSearchSuggestions = useCallback(async (query: string) => {
@@ -451,11 +433,11 @@ const AdminRecords: React.FC = () => {
 
   const handleViewRecord = useCallback((record: any) => {
     setSelectedRecord(record);
-    setShowDetailModal(true);
+    setIsModalOpen(true);
   }, []);
 
   const closeModal = useCallback(() => {
-    setShowDetailModal(false);
+    setIsModalOpen(false);
     setSelectedRecord(null);
   }, []);
 
@@ -482,8 +464,9 @@ const AdminRecords: React.FC = () => {
     return `₹${amount.toFixed(2)}`;
   };
 
-  const getStatusBadge = (status: string, type: string) => {
-    const statusMap: Record<string, { bg: string; text: string; icon: JSX.Element }> = {
+  // FIXED: Changed return type to React.ReactNode instead of JSX.Element
+  const getStatusBadge = (status: string, type: string): React.ReactNode => {
+    const statusMap: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
       'PENDING': { bg: 'bg-yellow-500/20', text: 'text-yellow-400', icon: <FiClock className="w-3 h-3" /> },
       'CONFIRMED': { bg: 'bg-blue-500/20', text: 'text-blue-400', icon: <FiCheckCircle className="w-3 h-3" /> },
       'PROCESSING': { bg: 'bg-purple-500/20', text: 'text-purple-400', icon: <FiRefreshCw className="w-3 h-3" /> },
@@ -510,8 +493,9 @@ const AdminRecords: React.FC = () => {
     );
   };
 
-  const getTypeBadge = (type: string) => {
-    const types: Record<string, { bg: string; text: string; icon: JSX.Element }> = {
+  // FIXED: Changed return type to React.ReactNode
+  const getTypeBadge = (type: string): React.ReactNode => {
+    const types: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
       'order': { bg: 'bg-blue-500/20', text: 'text-blue-400', icon: <FiFileText className="w-3 h-3" /> },
       'bill': { bg: 'bg-purple-500/20', text: 'text-purple-400', icon: <FiCreditCard className="w-3 h-3" /> },
       'user': { bg: 'bg-green-500/20', text: 'text-green-400', icon: <FiUser className="w-3 h-3" /> },
@@ -542,29 +526,26 @@ const AdminRecords: React.FC = () => {
 
   // ============ Effects ============
 
-  // Initial stats fetch
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
 
-  // Initial records fetch
   useEffect(() => {
     fetchAllRecords();
   }, [fetchAllRecords]);
 
-  // Debounced search effect
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchAllRecords();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search, filterStatus, sortBy, sortOrder, fetchAllRecords]);
+  }, [search, filterStatus, fetchAllRecords]);
 
   // ============ Render Detail Modal ============
 
-  const renderDetailModal = () => {
-    if (!selectedRecord) return null;
+  const renderDetailModal = (): React.ReactNode => {
+    if (!selectedRecord || !isModalOpen) return null;
 
     const isOrder = selectedRecord._type === 'order';
     const isBill = selectedRecord._type === 'bill';
@@ -572,35 +553,35 @@ const AdminRecords: React.FC = () => {
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div className="bg-gray-900 rounded-xl border border-gray-800 w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 w-full max-w-4xl max-h-[90vh] overflow-hidden mx-4">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-800">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                {isOrder && <FiFileText className="w-5 h-5 text-blue-400" />}
-                {isBill && <FiCreditCard className="w-5 h-5 text-purple-400" />}
-                {isUser && <FiUser className="w-5 h-5 text-green-400" />}
-                {selectedRecord._displayName || 'Record Details'}
+            <div className="flex items-center gap-3 min-w-0">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2 truncate">
+                {isOrder && <FiFileText className="w-5 h-5 text-blue-400 flex-shrink-0" />}
+                {isBill && <FiCreditCard className="w-5 h-5 text-purple-400 flex-shrink-0" />}
+                {isUser && <FiUser className="w-5 h-5 text-green-400 flex-shrink-0" />}
+                <span className="truncate">{selectedRecord._displayName || 'Record Details'}</span>
               </h3>
               {getTypeBadge(selectedRecord._type)}
             </div>
             <button
               onClick={closeModal}
-              className="p-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-white"
+              className="p-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-white flex-shrink-0"
             >
               <FiX className="w-5 h-5" />
             </button>
           </div>
 
           {/* Body */}
-          <div className="overflow-y-auto max-h-[70vh] p-6">
+          <div className="overflow-y-auto max-h-[70vh] p-4 md:p-6">
             {isOrder && renderOrderDetail(selectedRecord)}
             {isBill && renderBillDetail(selectedRecord)}
             {isUser && renderUserDetail(selectedRecord)}
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 p-4 border-t border-gray-800">
+          <div className="flex flex-wrap justify-end gap-3 p-4 border-t border-gray-800">
             <button
               onClick={closeModal}
               className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-colors"
@@ -627,12 +608,13 @@ const AdminRecords: React.FC = () => {
 
   // ============ Detail Renderers ============
 
-  const renderOrderDetail = (order: OrderRecord) => (
+  // FIXED: Changed return type to React.ReactNode
+  const renderOrderDetail = (order: OrderRecord): React.ReactNode => (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
           <p className="text-xs text-gray-400 uppercase">Order Number</p>
-          <p className="text-white font-medium">{order.orderNumber}</p>
+          <p className="text-white font-medium truncate">{order.orderNumber}</p>
         </div>
         <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
           <p className="text-xs text-gray-400 uppercase">Status</p>
@@ -651,20 +633,20 @@ const AdminRecords: React.FC = () => {
       <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-4">
         <h4 className="text-sm font-semibold text-white mb-3">Customer Details</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="flex items-center gap-2 text-gray-300">
-            <FiUser className="w-4 h-4 text-gray-500" />
-            <span>{order.delivery?.name || 'N/A'}</span>
+          <div className="flex items-center gap-2 text-gray-300 min-w-0">
+            <FiUser className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="truncate">{order.delivery?.name || 'N/A'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-300 min-w-0">
+            <FiPhone className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="truncate">{order.delivery?.contact || 'N/A'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-300 min-w-0 md:col-span-2">
+            <FiMapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="truncate">{order.delivery?.address || 'N/A'}</span>
           </div>
           <div className="flex items-center gap-2 text-gray-300">
-            <FiPhone className="w-4 h-4 text-gray-500" />
-            <span>{order.delivery?.contact || 'N/A'}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-300">
-            <FiMapPin className="w-4 h-4 text-gray-500" />
-            <span>{order.delivery?.address || 'N/A'}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-300">
-            <FiCalendar className="w-4 h-4 text-gray-500" />
+            <FiCalendar className="w-4 h-4 text-gray-500 flex-shrink-0" />
             <span>{formatDate(order.createdAt)}</span>
           </div>
         </div>
@@ -675,13 +657,13 @@ const AdminRecords: React.FC = () => {
           <h4 className="text-sm font-semibold text-white mb-3">Order Items</h4>
           <div className="space-y-2">
             {order.items.map((item: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-700/50 last:border-0">
-                <div className="flex items-center gap-3">
+              <div key={idx} className="flex flex-wrap items-center justify-between py-2 border-b border-gray-700/50 last:border-0 gap-2">
+                <div className="flex items-center gap-3 min-w-0">
                   <span className="text-gray-400 text-sm">{idx + 1}.</span>
-                  <span className="text-white">{item.productName}</span>
-                  <span className="text-gray-400 text-sm">x{item.quantity}</span>
+                  <span className="text-white truncate">{item.productName}</span>
+                  <span className="text-gray-400 text-sm flex-shrink-0">x{item.quantity}</span>
                 </div>
-                <span className="text-white font-medium">{formatCurrency(item.totalPrice)}</span>
+                <span className="text-white font-medium flex-shrink-0">{formatCurrency(item.totalPrice)}</span>
               </div>
             ))}
           </div>
@@ -693,8 +675,8 @@ const AdminRecords: React.FC = () => {
           <h4 className="text-sm font-semibold text-white mb-3">Payment History</h4>
           <div className="space-y-2">
             {order.paymentHistory.map((payment: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-700/50 last:border-0">
-                <div className="flex items-center gap-3">
+              <div key={idx} className="flex flex-wrap items-center justify-between py-2 border-b border-gray-700/50 last:border-0 gap-2">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="text-gray-400 text-sm">{formatDate(payment.timestamp)}</span>
                   <span className="text-gray-300">{payment.method}</span>
                 </div>
@@ -702,11 +684,11 @@ const AdminRecords: React.FC = () => {
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-3 pt-3 border-t border-gray-700">
+          <div className="flex flex-wrap justify-between mt-3 pt-3 border-t border-gray-700 gap-2">
             <span className="text-gray-400">Total Paid</span>
             <span className="text-green-400 font-bold">{formatCurrency(order.paidAmount || 0)}</span>
           </div>
-          <div className="flex justify-between mt-1">
+          <div className="flex flex-wrap justify-between mt-1 gap-2">
             <span className="text-gray-400">Remaining</span>
             <span className="text-red-400 font-bold">{formatCurrency(order.remainingAmount || 0)}</span>
           </div>
@@ -715,12 +697,13 @@ const AdminRecords: React.FC = () => {
     </div>
   );
 
-  const renderBillDetail = (bill: BillRecord) => (
+  // FIXED: Changed return type to React.ReactNode
+  const renderBillDetail = (bill: BillRecord): React.ReactNode => (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
           <p className="text-xs text-gray-400 uppercase">Bill Number</p>
-          <p className="text-white font-medium">{bill.billNumber}</p>
+          <p className="text-white font-medium truncate">{bill.billNumber}</p>
         </div>
         <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
           <p className="text-xs text-gray-400 uppercase">Payment Status</p>
@@ -732,27 +715,27 @@ const AdminRecords: React.FC = () => {
         </div>
         <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
           <p className="text-xs text-gray-400 uppercase">Payment Method</p>
-          <p className="text-white">{bill.paymentMethod || 'N/A'}</p>
+          <p className="text-white truncate">{bill.paymentMethod || 'N/A'}</p>
         </div>
       </div>
 
       <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-4">
         <h4 className="text-sm font-semibold text-white mb-3">Customer Details</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="flex items-center gap-2 text-gray-300">
-            <FiUser className="w-4 h-4 text-gray-500" />
-            <span>{bill.customerName}</span>
+          <div className="flex items-center gap-2 text-gray-300 min-w-0">
+            <FiUser className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="truncate">{bill.customerName}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-300 min-w-0">
+            <FiPhone className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="truncate">{bill.customerContact}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-300 min-w-0 md:col-span-2">
+            <FiMapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="truncate">{bill.customerAddress}</span>
           </div>
           <div className="flex items-center gap-2 text-gray-300">
-            <FiPhone className="w-4 h-4 text-gray-500" />
-            <span>{bill.customerContact}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-300">
-            <FiMapPin className="w-4 h-4 text-gray-500" />
-            <span>{bill.customerAddress}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-300">
-            <FiCalendar className="w-4 h-4 text-gray-500" />
+            <FiCalendar className="w-4 h-4 text-gray-500 flex-shrink-0" />
             <span>{formatDate(bill.createdAt)}</span>
           </div>
         </div>
@@ -763,13 +746,13 @@ const AdminRecords: React.FC = () => {
           <h4 className="text-sm font-semibold text-white mb-3">Bill Items</h4>
           <div className="space-y-2">
             {bill.items.map((item: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-700/50 last:border-0">
-                <div className="flex items-center gap-3">
+              <div key={idx} className="flex flex-wrap items-center justify-between py-2 border-b border-gray-700/50 last:border-0 gap-2">
+                <div className="flex items-center gap-3 min-w-0">
                   <span className="text-gray-400 text-sm">{idx + 1}.</span>
-                  <span className="text-white">{item.productName}</span>
-                  <span className="text-gray-400 text-sm">x{item.quantity}</span>
+                  <span className="text-white truncate">{item.productName}</span>
+                  <span className="text-gray-400 text-sm flex-shrink-0">x{item.quantity}</span>
                 </div>
-                <span className="text-white font-medium">{formatCurrency(item.total || item.mrp * item.quantity)}</span>
+                <span className="text-white font-medium flex-shrink-0">{formatCurrency(item.total || item.mrp * item.quantity)}</span>
               </div>
             ))}
           </div>
@@ -811,8 +794,8 @@ const AdminRecords: React.FC = () => {
           <h4 className="text-sm font-semibold text-white mb-3">Payment History</h4>
           <div className="space-y-2">
             {bill.paymentHistory.map((payment: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-700/50 last:border-0">
-                <div className="flex items-center gap-3">
+              <div key={idx} className="flex flex-wrap items-center justify-between py-2 border-b border-gray-700/50 last:border-0 gap-2">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="text-gray-400 text-sm">{formatDate(payment.timestamp)}</span>
                   <span className="text-gray-300">{payment.method}</span>
                   <span className="text-xs text-gray-500">{payment.type}</span>
@@ -826,9 +809,10 @@ const AdminRecords: React.FC = () => {
     </div>
   );
 
-  const renderUserDetail = (user: UserRecord) => (
+  // FIXED: Changed return type to React.ReactNode
+  const renderUserDetail = (user: UserRecord): React.ReactNode => (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
           <p className="text-xs text-gray-400 uppercase">User ID</p>
           <p className="text-white font-medium text-sm truncate">{user.id}</p>
@@ -850,17 +834,17 @@ const AdminRecords: React.FC = () => {
       <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-4">
         <h4 className="text-sm font-semibold text-white mb-3">Contact Details</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="flex items-center gap-2 text-gray-300">
-            <FiUser className="w-4 h-4 text-gray-500" />
-            <span className="font-medium">{user.name}</span>
+          <div className="flex items-center gap-2 text-gray-300 min-w-0">
+            <FiUser className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="font-medium truncate">{user.name}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-300">
-            <FiPhone className="w-4 h-4 text-gray-500" />
-            <span>{user.contact}</span>
+          <div className="flex items-center gap-2 text-gray-300 min-w-0">
+            <FiPhone className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="truncate">{user.contact}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-300">
-            <FiMapPin className="w-4 h-4 text-gray-500" />
-            <span>{user.address}</span>
+          <div className="flex items-center gap-2 text-gray-300 min-w-0 md:col-span-2">
+            <FiMapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="truncate">{user.address}</span>
           </div>
           <div className="flex items-center gap-2 text-gray-300">
             <span className="text-gray-500 text-sm">Pincode:</span>
@@ -878,30 +862,30 @@ const AdminRecords: React.FC = () => {
           </div>
           <div>
             <p className="text-xs text-gray-400">Email</p>
-            <p className="text-white">{user.email || 'Not provided'}</p>
+            <p className="text-white truncate">{user.email || 'Not provided'}</p>
           </div>
         </div>
       </div>
     </div>
   );
 
-  // ============ Render Record Cards ============
+  // ============ Render Record Cards - Mobile Optimized ============
 
-  const renderCardView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  const renderCardView = (): React.ReactNode => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {filteredRecords.map((record, idx) => (
         <div
           key={`${record._type}-${record.id || idx}`}
           className="bg-gray-900/80 rounded-xl border border-gray-800 p-4 hover:border-gold-500/30 transition-all duration-200 cursor-pointer"
           onClick={() => handleViewRecord(record)}
         >
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {getTypeBadge(record._type)}
               <span className="text-xs text-gray-400">{formatDate(record._date)}</span>
             </div>
             {record._type !== 'user' && (
-              <span className="text-sm font-bold text-gold-400">
+              <span className="text-sm font-bold text-gold-400 flex-shrink-0">
                 {formatCurrency(record._amount)}
               </span>
             )}
@@ -909,19 +893,19 @@ const AdminRecords: React.FC = () => {
 
           <div className="mt-3">
             <p className="text-white font-medium truncate">{record._displayName}</p>
-            <div className="flex items-center gap-2 mt-1 text-sm text-gray-400">
-              <FiUser className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-2 mt-1 text-sm text-gray-400 min-w-0">
+              <FiUser className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">{record._customer}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <FiPhone className="w-3.5 h-3.5" />
-              <span>{record._contact}</span>
+            <div className="flex items-center gap-2 text-sm text-gray-400 min-w-0">
+              <FiPhone className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">{record._contact}</span>
             </div>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-gray-800 flex items-center justify-between">
+          <div className="mt-3 pt-3 border-t border-gray-800 flex flex-wrap items-center justify-between gap-2">
             {getStatusBadge(record._status, record._type)}
-            <button className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors border border-blue-500/20">
+            <button className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors border border-blue-500/20 flex-shrink-0">
               <FiEye className="w-4 h-4" />
             </button>
           </div>
@@ -932,20 +916,20 @@ const AdminRecords: React.FC = () => {
 
   // ============ Render Table View ============
 
-  const renderTableView = () => (
+  const renderTableView = (): React.ReactNode => (
     <div className="bg-gray-900/80 rounded-xl border border-gray-800 overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[700px]">
           <thead>
             <tr className="border-b border-gray-800 bg-gray-900/50">
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">#</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Reference</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Customer</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Contact</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider hidden sm:table-cell">Customer</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">Contact</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider hidden lg:table-cell">Amount</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider hidden xl:table-cell">Date</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -979,15 +963,15 @@ const AdminRecords: React.FC = () => {
                       {record._displayName}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 hidden sm:table-cell">
                     <span className="text-gray-300 text-sm truncate max-w-[100px] block">
                       {record._customer}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 hidden md:table-cell">
                     <span className="text-gray-300 text-sm">{record._contact}</span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 hidden lg:table-cell">
                     <span className="text-gold-400 font-medium">
                       {record._type !== 'user' ? formatCurrency(record._amount) : '—'}
                     </span>
@@ -995,7 +979,7 @@ const AdminRecords: React.FC = () => {
                   <td className="px-4 py-3">
                     {getStatusBadge(record._status, record._type)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 hidden xl:table-cell">
                     <span className="text-gray-400 text-sm">{formatDate(record._date)}</span>
                   </td>
                   <td className="px-4 py-3">
@@ -1019,21 +1003,21 @@ const AdminRecords: React.FC = () => {
     </div>
   );
 
-  // ============ Filters Bar ============
+  // ============ Filters Bar - Mobile Optimized ============
 
-  const renderFilters = () => (
+  const renderFilters = (): React.ReactNode => (
     <div className="flex flex-wrap items-center gap-3 mb-6">
       {/* Search with Suggestions */}
-      <div className="relative flex-1 min-w-[200px]">
+      <div className="relative flex-1 min-w-[180px]">
         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
         <input
           type="text"
-          placeholder="Search by name, contact, order, or bill..."
+          placeholder="Search..."
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           onFocus={() => search.length >= 2 && setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 300)}
-          className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500/50"
+          className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500/50 text-sm"
         />
 
         {/* Suggestions Dropdown */}
@@ -1045,12 +1029,12 @@ const AdminRecords: React.FC = () => {
                 onClick={() => handleSuggestionClick(user)}
                 className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors flex items-center gap-3"
               >
-                <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center text-white font-semibold text-sm">
+                <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <p className="text-white text-sm">{user.name}</p>
-                  <p className="text-gray-400 text-xs">{user.contact} • {user.cityVillage}</p>
+                <div className="min-w-0">
+                  <p className="text-white text-sm truncate">{user.name}</p>
+                  <p className="text-gray-400 text-xs truncate">{user.contact} • {user.cityVillage}</p>
                 </div>
               </button>
             ))}
@@ -1062,7 +1046,7 @@ const AdminRecords: React.FC = () => {
       <select
         value={filterStatus}
         onChange={(e) => setFilterStatus(e.target.value)}
-        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500/50"
+        className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500/50 text-sm flex-1 sm:flex-none min-w-[120px]"
       >
         <option value="all">All Status</option>
         <option value="PENDING">Pending</option>
@@ -1077,7 +1061,7 @@ const AdminRecords: React.FC = () => {
       </select>
 
       {/* View Toggle */}
-      <div className="flex bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+      <div className="flex bg-gray-800 rounded-lg border border-gray-700 overflow-hidden flex-shrink-0">
         <button
           onClick={() => setViewMode('table')}
           className={`p-2 transition-colors ${viewMode === 'table' ? 'bg-gold-500/20 text-gold-400' : 'text-gray-400 hover:text-white'}`}
@@ -1100,80 +1084,96 @@ const AdminRecords: React.FC = () => {
           fetchAllRecords();
           fetchStats();
         }}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors border border-gray-700"
+        className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors border border-gray-700 flex-shrink-0"
       >
         <FiRefreshCw className={`w-4 h-4 ${loading || statsLoading ? 'animate-spin' : ''}`} />
-        <span className="hidden sm:inline">Refresh</span>
+        <span className="hidden sm:inline text-sm">Refresh</span>
       </button>
     </div>
   );
 
-  // ============ Stats Summary ============
+  // ============ Stats Summary - Mobile Optimized ============
 
-  const renderStats = () => (
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-3">
-        <p className="text-gray-400 text-xs uppercase">Total Records</p>
-        <p className="text-white font-bold text-lg">{stats.totalOrders + stats.totalBills + stats.totalUsers}</p>
+  const renderStats = (): React.ReactNode => (
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-3 mb-6">
+      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-2 sm:p-3">
+        <p className="text-gray-400 text-[10px] sm:text-xs uppercase">Total</p>
+        <p className="text-white font-bold text-base sm:text-lg">{stats.totalOrders + stats.totalBills + stats.totalUsers}</p>
       </div>
-      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-3">
-        <p className="text-gray-400 text-xs uppercase">Orders</p>
-        <p className="text-blue-400 font-bold text-lg">{stats.totalOrders}</p>
+      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-2 sm:p-3">
+        <p className="text-gray-400 text-[10px] sm:text-xs uppercase">Orders</p>
+        <p className="text-blue-400 font-bold text-base sm:text-lg">{stats.totalOrders}</p>
       </div>
-      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-3">
-        <p className="text-gray-400 text-xs uppercase">Bills</p>
-        <p className="text-purple-400 font-bold text-lg">{stats.totalBills}</p>
+      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-2 sm:p-3">
+        <p className="text-gray-400 text-[10px] sm:text-xs uppercase">Bills</p>
+        <p className="text-purple-400 font-bold text-base sm:text-lg">{stats.totalBills}</p>
       </div>
-      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-3">
-        <p className="text-gray-400 text-xs uppercase">Users</p>
-        <p className="text-green-400 font-bold text-lg">{stats.totalUsers}</p>
+      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-2 sm:p-3">
+        <p className="text-gray-400 text-[10px] sm:text-xs uppercase">Users</p>
+        <p className="text-green-400 font-bold text-base sm:text-lg">{stats.totalUsers}</p>
       </div>
-      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-3">
-        <p className="text-gray-400 text-xs uppercase">Revenue</p>
-        <p className="text-gold-400 font-bold text-lg">{formatCurrency(stats.totalRevenue)}</p>
+      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-2 sm:p-3">
+        <p className="text-gray-400 text-[10px] sm:text-xs uppercase">Revenue</p>
+        <p className="text-gold-400 font-bold text-base sm:text-lg">{formatCurrency(stats.totalRevenue)}</p>
       </div>
-      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-3">
-        <p className="text-gray-400 text-xs uppercase">Paid</p>
-        <p className="text-green-400 font-bold text-lg">{formatCurrency(stats.totalPaid)}</p>
+      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-2 sm:p-3">
+        <p className="text-gray-400 text-[10px] sm:text-xs uppercase">Paid</p>
+        <p className="text-green-400 font-bold text-base sm:text-lg">{formatCurrency(stats.totalPaid)}</p>
       </div>
-      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-3">
-        <p className="text-gray-400 text-xs uppercase">Pending Orders</p>
-        <p className="text-yellow-400 font-bold text-lg">{stats.pendingOrders}</p>
+      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-2 sm:p-3">
+        <p className="text-gray-400 text-[10px] sm:text-xs uppercase">Pend Orders</p>
+        <p className="text-yellow-400 font-bold text-base sm:text-lg">{stats.pendingOrders}</p>
       </div>
-      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-3">
-        <p className="text-gray-400 text-xs uppercase">Pending Bills</p>
-        <p className="text-orange-400 font-bold text-lg">{stats.pendingBills}</p>
+      <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-2 sm:p-3">
+        <p className="text-gray-400 text-[10px] sm:text-xs uppercase">Pend Bills</p>
+        <p className="text-orange-400 font-bold text-base sm:text-lg">{stats.pendingBills}</p>
       </div>
     </div>
   );
 
   // ============ Tabs ============
 
-  const renderTabs = () => (
+  const renderTabs = (): React.ReactNode => (
     <div className="flex flex-wrap gap-2 mb-4">
       <button
         onClick={() => setActiveTab('all')}
-        className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'all' ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30' : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'}`}
+        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-sm ${
+          activeTab === 'all' 
+            ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30' 
+            : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
+        }`}
       >
-        All Records
+        All
       </button>
       <button
         onClick={() => setActiveTab('orders')}
-        className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'orders' ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30' : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'}`}
+        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-sm ${
+          activeTab === 'orders' 
+            ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30' 
+            : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
+        }`}
       >
-        <FiFileText className="inline mr-1.5" /> Orders
+        <FiFileText className="inline mr-1" /> Orders
       </button>
       <button
         onClick={() => setActiveTab('bills')}
-        className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'bills' ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30' : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'}`}
+        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-sm ${
+          activeTab === 'bills' 
+            ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30' 
+            : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
+        }`}
       >
-        <FiCreditCard className="inline mr-1.5" /> Bills
+        <FiCreditCard className="inline mr-1" /> Bills
       </button>
       <button
         onClick={() => setActiveTab('users')}
-        className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'users' ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30' : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'}`}
+        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-sm ${
+          activeTab === 'users' 
+            ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30' 
+            : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
+        }`}
       >
-        <FiUser className="inline mr-1.5" /> Users
+        <FiUser className="inline mr-1" /> Users
       </button>
     </div>
   );
@@ -1181,20 +1181,20 @@ const AdminRecords: React.FC = () => {
   // ============ Main Render ============
 
   return (
-    <div className="relative">
-      <div className="flex items-center justify-between mb-6">
+    <div className="relative px-2 sm:px-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <FiFile className="w-6 h-6 text-gold-400" />
-            Records & Transactions
+          <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+            <FiFile className="w-5 h-5 sm:w-6 sm:h-6 text-gold-400" />
+            Records
           </h2>
-          <p className="text-gray-400 text-sm mt-1">
-            View and manage all orders, bills, and user records in one place
+          <p className="text-gray-400 text-xs sm:text-sm mt-1">
+            View and manage orders, bills, and users
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500">
-            {filteredRecords.length} records found
+          <span className="text-xs text-gray-500 flex-shrink-0">
+            {filteredRecords.length} records
           </span>
         </div>
       </div>
