@@ -652,7 +652,7 @@ async def get_products(
     include_deleted: Optional[bool] = Query(False, description="Include soft-deleted products"),
     sort_by: Optional[str] = Query("createdAt", description="Sort field"),
     sort_order: Optional[str] = Query("desc", description="Sort order (asc/desc)"),
-    limit: Optional[int] = Query(100, ge=1, le=1000, description="Results limit"),
+     limit: Optional[int] = Query(1000, ge=1, le=10000, description="Results limit"),
     offset: Optional[int] = Query(0, ge=0, description="Results offset"),
     db: Session = Depends(get_db)
 ):

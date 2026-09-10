@@ -5,7 +5,7 @@ const Footer: React.FC = () => {
   const phoneNumber = "9092920277";
   const whatsappLink = `https://wa.me/${phoneNumber}`;
   const location = "Elayirampannai Rd, Kovilpatti, Chittrampatti, Tamil Nadu 628502";
-  const mapsLink = "https://maps.app.goo.gl/fFwpoRZtvDwfy6hP6";
+  const mapsLink = "https://maps.app.goo.gl/WCL4hcqXkrrP9gveA";
 
   return (
     <footer className="bg-black text-white py-12">
