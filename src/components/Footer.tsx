@@ -33,7 +33,7 @@ const Footer: React.FC = () => {
             <h3 className="text-lg font-semibold mb-4 text-yellow-500">Visit Our Store</h3>
             <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-800 relative">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3938.5856664590633!2d77.8537807!3d9.1917948!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b06b3369cb63cd3%3A0x7fa831bd1d225f2d!2sThangatamil%20crackers!5e0!3m2!1sen!2sin!4v1785566735928!5m2!1sen!2sin"
+                src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3763.7143659012413!2d77.83685567502147!3d9.23934719083063!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zOcKwMTQnMjEuNyJOIDc3wrA1MCcyMi4wIkU!5e1!3m2!1sen!2sin!4v1789030952794!5m2!1sen!2sin"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

@@ -31,6 +31,8 @@ import axios from 'axios';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import companyLogo from '../../assets/Logo.png';
+import { generateInvoicePdf } from '../../utils/generateInvoicePdf';
+import { COMPANY_CONFIG } from '../../config/company';
 
 // ============================================
 // API CONFIGURATION & CONSTANTS
@@ -38,14 +40,6 @@ import companyLogo from '../../assets/Logo.png';
 const API_BASE = import.meta.env.VITE_API_URL || '';
 const API_URL = `${API_BASE}/api`;
 
-const COMPANY_CONFIG = {
-  name: 'THANGATAMIL CRACKERS',
-  tagline: 'Your Trusted Partner',
-  address: 'Elayirampannai Rd, Kovilpatti, Chittrampatti, Tamil Nadu 628502',
-  phone: '+91 98765 43210',
-  email: 'email',
-  website: 'www.accord.in',
-};
 
 // ============================================
 // TYPES
@@ -187,208 +181,39 @@ const generateBillPDF = async (bill: Bill) => {
       paymentStatusColor = '#ef4444';
     }
 
-    let itemsHtml = '';
-    bill.items.forEach((item, idx) => {
-      itemsHtml += `
-        <tr>
-          <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; color: #333; text-align: center; background: ${idx % 2 === 0 ? '#fafafa' : 'white'};">
-            ${idx + 1}
-          </td>
-          <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; color: #333; background: ${idx % 2 === 0 ? '#fafafa' : 'white'};">
-            <strong>${item.productName}</strong>
-          </td>
-          <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: right; font-size: 13px; color: #333; background: ${idx % 2 === 0 ? '#fafafa' : 'white'};">
-            ₹${item.mrp.toFixed(2)}
-          </td>
-          <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 13px; color: #333; background: ${idx % 2 === 0 ? '#fafafa' : 'white'};">
-            ${item.quantity}
-          </td>
-          <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: right; font-size: 13px; font-weight: bold; color: #1a1a2e; background: ${idx % 2 === 0 ? '#fafafa' : 'white'};">
-            ₹${item.total.toFixed(2)}
-          </td>
-        </tr>
-      `;
-    });
+    const paymentMethodDisplay = bill.paymentMethod;
 
-    container.innerHTML = `
-      <div style="max-width: 100%; padding: 20px; background: white;">
-        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #d4a843; padding-bottom: 20px; margin-bottom: 20px;">
-          <div style="display: flex; align-items: center; gap: 15px;">
-            ${logoImageUrl ? `
-              <img src="${logoImageUrl}" alt="${COMPANY_CONFIG.name}" style="width: 70px; height: 70px; object-fit: contain; border-radius: 8px;" />
-            ` : `
-              <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #d4a843, #f5d06b); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white;">🎆</div>
-            `}
-            <div>
-              <div style="font-size: 24px; font-weight: bold; color: #1a1a2e; letter-spacing: 1px;">${COMPANY_CONFIG.name}</div>
-              <div style="font-size: 12px; color: #6b7280; letter-spacing: 2px; margin-top: 2px;">${COMPANY_CONFIG.tagline}</div>
-            </div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 32px; font-weight: bold; color: #d4a843; letter-spacing: 4px;">INVOICE</div>
-            <div style="font-size: 14px; color: #6b7280; margin-top: 4px; font-weight: 500;">#${bill.billNumber}</div>
-          </div>
-        </div>
-
-        <div style="text-align: center; font-size: 12px; color: #6b7280; margin-bottom: 20px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; background: #fafafa; border-radius: 8px;">
-          📍 ${COMPANY_CONFIG.address} &nbsp;|&nbsp; 📞 ${COMPANY_CONFIG.phone} &nbsp;|&nbsp; ✉ ${COMPANY_CONFIG.email} &nbsp;|&nbsp; 🌐 ${COMPANY_CONFIG.website}
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-          <div style="border: 1px solid #e5e7eb; padding: 16px 20px; border-radius: 8px; background: #f8fafc;">
-            <div style="font-size: 11px; font-weight: bold; color: #d4a843; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px;">
-              👤 Bill To
-            </div>
-            <div style="font-size: 16px; font-weight: bold; color: #1a1a2e; margin: 4px 0;">${bill.customerName}</div>
-            <div style="font-size: 13px; color: #4b5563; margin: 2px 0;">📞 ${bill.customerContact}</div>
-            <div style="font-size: 13px; color: #4b5563; margin: 2px 0;">📍 ${bill.customerAddress || 'N/A'}</div>
-          </div>
-          <div style="border: 1px solid #e5e7eb; padding: 16px 20px; border-radius: 8px; background: #f8fafc;">
-            <div style="font-size: 11px; font-weight: bold; color: #d4a843; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px;">
-              📋 Invoice Details
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0;">
-              <span style="color: #6b7280;">Date</span>
-              <span style="font-weight: 500;">${formattedDate}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0;">
-              <span style="color: #6b7280;">Time</span>
-              <span style="font-weight: 500;">${formattedTime}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0;">
-              <span style="color: #6b7280;">Payment</span>
-              <span style="font-weight: 500; text-transform: uppercase;">${bill.paymentMethod}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0;">
-              <span style="color: #6b7280;">Status</span>
-              <span style="display: inline-block; padding: 2px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; color: #fff; background: ${paymentStatusColor};">
-                ${paymentStatusDisplay.toUpperCase()}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-          <thead>
-            <tr style="background: linear-gradient(135deg, #d4a843, #c49a3a); color: #fff;">
-              <th style="padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; width: 40px;">#</th>
-              <th style="padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Item Description</th>
-              <th style="padding: 12px 16px; text-align: right; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Rate (₹)</th>
-              <th style="padding: 12px 16px; text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Qty</th>
-              <th style="padding: 12px 16px; text-align: right; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Amount (₹)</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsHtml}
-          </tbody>
-        </table>
-
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
-          <div style="width: 360px;">
-            <div style="display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f3f4f6;">
-              <span style="font-size: 13px; color: #6b7280;">Subtotal</span>
-              <span style="font-size: 14px; color: #1a1a2e; font-weight: 500;">₹${(bill.subtotal || 0).toFixed(2)}</span>
-            </div>
-            ${(bill.discount || 0) > 0 ? `
-              <div style="display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f3f4f6;">
-                <span style="font-size: 13px; color: #6b7280;">Discount</span>
-                <span style="font-size: 14px; color: #ef4444; font-weight: 500;">-₹${(bill.discount || 0).toFixed(2)}</span>
-              </div>
-            ` : ''}
-            ${(bill.customerDiscount || 0) > 0 ? `
-              <div style="display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f3f4f6; background: #f0fdf4;">
-                <span style="font-size: 13px; color: #22c55e; font-weight: 600;">⭐ Customer Discount</span>
-                <span style="font-size: 14px; color: #22c55e; font-weight: 600;">-₹${(bill.customerDiscount || 0).toFixed(2)}</span>
-              </div>
-            ` : ''}
-            <div style="display: flex; justify-content: space-between; padding: 12px 12px; border-top: 2px solid #d4a843; margin-top: 4px; background: #f8fafc; border-radius: 0 0 8px 8px;">
-              <span style="font-size: 18px; font-weight: bold; color: #1a1a2e;">Grand Total</span>
-              <span style="font-size: 22px; font-weight: bold; color: #d4a843;">₹${(bill.total || 0).toFixed(2)}</span>
-            </div>
-
-            <div style="border-top: 2px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
-              <div style="display: flex; justify-content: space-between; padding: 4px 12px;">
-                <span style="font-size: 12px; color: #6b7280;">Payment Method</span>
-                <span style="font-size: 13px; color: #1a1a2e; font-weight: 500; text-transform: uppercase;">${bill.paymentMethod}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 12px;">
-                <span style="font-size: 12px; color: #6b7280;">Payment Status</span>
-                <span style="font-size: 13px; font-weight: 600; color: ${paymentStatusColor};">${paymentStatusDisplay}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 12px; border-bottom: 1px solid #f3f4f6;">
-                <span style="font-size: 13px; color: #6b7280; font-weight: 600;">Total Paid</span>
-                <span style="font-size: 14px; color: #22c55e; font-weight: 600;">₹${(paidAmount).toFixed(2)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 8px 12px;">
-                <span style="font-size: 14px; color: #6b7280; font-weight: 600;">Balance Due</span>
-                <span style="font-size: 16px; font-weight: bold; color: ${remainingAmount > 0 ? '#eab308' : '#22c55e'};">
-                  ₹${remainingAmount.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="text-align: center; padding: 25px 0 15px; border-top: 2px solid #e5e7eb; margin-top: 10px;">
-          <div style="font-size: 18px; font-weight: bold; color: #1a1a2e; margin-bottom: 6px;">
-            Thank You for Your Business!
-          </div>
-          <div style="font-size: 14px; color: #4b5563;">
-            We appreciate your trust in ${COMPANY_CONFIG.name}
-          </div>
-          ${remainingAmount > 0 ? `
-            <div style="margin-top: 8px; padding: 8px 16px; background: #fef3c7; border-radius: 6px; display: inline-block;">
-              <span style="font-size: 13px; color: #d97706; font-weight: 600;">
-                ⚠️ Remaining Balance: ₹${remainingAmount.toFixed(2)} - Please complete your payment
-              </span>
-            </div>
-          ` : paidAmount > 0 ? `
-            <div style="margin-top: 8px;">
-              <span style="font-size: 13px; color: #22c55e; font-weight: 600;">
-                ✅ Payment Complete - Thank you!
-              </span>
-            </div>
-          ` : `
-            <div style="margin-top: 8px;">
-              <span style="font-size: 13px; color: #ef4444; font-weight: 600;">
-                ⏳ Payment Pending - Please complete your payment
-              </span>
-            </div>
-          `}
-          <div style="font-size: 10px; color: #9ca3af; margin-top: 12px; padding-top: 8px; border-top: 1px solid #f3f4f6;">
-            This is a computer-generated invoice. Goods once sold will not be taken back.
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(container);
-    await new Promise(resolve => setTimeout(resolve, 200));
-
-    const canvas = await html2canvas(container, {
-      scale: 2.5,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-      width: 794,
-      height: container.scrollHeight,
-    });
-
-    document.body.removeChild(container);
-
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'px',
-      format: 'a4',
-      hotfixes: ['px_scaling']
-    });
-
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`Invoice_${bill.billNumber}.pdf`);
+    await generateInvoicePdf({
+      companyName: COMPANY_CONFIG.name,
+      tagline: COMPANY_CONFIG.tagline,
+      address: COMPANY_CONFIG.address,
+      phone: COMPANY_CONFIG.phone,
+      email: COMPANY_CONFIG.email,
+      website: COMPANY_CONFIG.website,
+      logoDataUrl: logoImageUrl,
+      invoiceNumber: bill.billNumber,
+      date: formattedDate,
+      time: formattedTime,
+      customerName: bill.customerName,
+      customerContact: bill.customerContact,
+      customerAddress: bill.customerAddress,
+      paymentMethod: paymentMethodDisplay,
+      paymentStatus: paymentStatusDisplay,
+      paymentStatusColor: paymentStatusColor,
+      items: bill.items.map((item) => ({
+        name: item.productName,
+        qty: item.quantity,
+        unitPrice: item.mrp,
+        total: item.total,
+      })),
+      subtotal: bill.subtotal || 0,
+      productDiscount: bill.discount || 0,
+      additionalDiscount: bill.customerDiscount || 0,
+      additionalDiscountLabel: 'Customer Discount',
+      grandTotal: bill.total || 0,
+      paidAmount: paidAmount,
+      remainingAmount: remainingAmount,
+    }, `Invoice_${bill.billNumber}.pdf`);
 
     console.log('PDF downloaded successfully');
   } catch (error) {

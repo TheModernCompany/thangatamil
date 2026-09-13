@@ -20,6 +20,7 @@ import { CartProvider } from './pages/ProductCart';
 import AdminLayout from './pages/Admin/AdminLayout';
 import UserRegister from './pages/UserRegister';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import ScrollToTop from './components/ScrollToTop';
 
 // Protected Route Component
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -35,6 +36,7 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <AuthProvider>
         <CartProvider>
           <Routes>

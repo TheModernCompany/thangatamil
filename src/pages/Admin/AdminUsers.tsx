@@ -6,13 +6,13 @@ import jsPDF from 'jspdf';
 
 // Import your company logo
 import companyLogo from '../../assets/Logo.png';
-
+import { generateInvoicePdf } from '../../utils/generateInvoicePdf';
 // API Configuration
 const API_BASE_URL = '';
 const API_URL = `${API_BASE_URL}/api`;
 
 // Company Branding Configuration
-const COMPANY_NAME = 'THANGATAMIL CRACKERS';
+import { COMPANY_CONFIG } from '../../config/company';
 
 // ============ Types ============
 
@@ -783,206 +783,45 @@ const generateOrderPDF = async (order: OrderWithUser, formatCurrency: (amount: n
             }
         }
         
-        container.innerHTML = `
-            <div style="max-width: 100%; padding: 20px;">
-                <!-- Header -->
-                <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #d4a843; padding-bottom: 15px; margin-bottom: 15px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        ${logoImageUrl ? `
-                            <img src="${logoImageUrl}" alt="${COMPANY_NAME}" style="width: 60px; height: 60px; object-fit: contain;" />
-                        ` : `
-                            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #d4a843, #f5d06b); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white;">🎆</div>
-                        `}
-                        <div>
-                            <div style="font-size: 22px; font-weight: bold; color: #d4a843; letter-spacing: 1px;">${COMPANY_NAME}</div>
-                            <div style="font-size: 11px; color: #666; letter-spacing: 2px;">PREMIUM FIREWORKS & CELEBRATIONS</div>
-                        </div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 28px; font-weight: bold; color: #d4a843; letter-spacing: 3px;">INVOICE</div>
-                    </div>
-                </div>
-                
-                <!-- Customer Information -->
-                <div style="margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div style="flex: 1;">
-                            <div style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Customer Information</div>
-                            <div style="font-size: 20px; font-weight: bold; color: #333; margin-bottom: 8px;">
-                                ${order.userDetails.name}
-                            </div>
-                            <div style="font-size: 14px; color: #666; margin-top: 4px;">
-                                ${order.userDetails.address}, ${order.userDetails.cityVillage}, ${order.userDetails.pincode}
-                            </div>
-                            <div style="font-size: 14px; color: #666; margin-top: 4px;">
-                                ${order.userDetails.contact}
-                            </div>
-                            <div style="font-size: 14px; color: #666; margin-top: 4px;">
-                                ${order.userDetails.email || 'N/A'}
-                            </div>
-                            ${order.userDetails.additionalDiscount && order.userDetails.additionalDiscount > 0 ? `
-                                <div style="font-size: 13px; color: #22c55e; margin-top: 6px; font-weight: bold;">
-                                    🎉 ${order.userDetails.additionalDiscount}% Additional Discount Applied!
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div style="text-align: right; padding-left: 20px;">
-                            <div style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Invoice #</div>
-                            <div style="font-size: 18px; font-weight: bold; color: #333;">${displayInvoiceNumber}</div>
-                            <div style="font-size: 12px; color: #666; margin-top: 4px;">Status: ${order.orderStatus}</div>
-                            <div style="font-size: 12px; color: #666; margin-top: 2px;">Payment: ${paymentStatusDisplay}</div>
-                            <div style="font-size: 12px; color: #666; margin-top: 2px;">Method: ${paymentMethodDisplay}</div>
-                            ${order.referenceId ? `<div style="font-size: 12px; color: #666; margin-top: 2px;">Ref ID: ${order.referenceId}</div>` : ''}
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Order Items -->
-                <div style="margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 12px;">
-                        <div style="font-size: 16px; font-weight: bold; color: #333;">Order Items</div>
-                        <div style="font-size: 12px; color: #999;">${order.items?.length || 0} ITEMS</div>
-                    </div>
-                    
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background-color: #f9f9f9;">
-                                <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #666; border-bottom: 2px solid #ddd;">Product</th>
-                                <th style="padding: 8px 12px; text-align: center; font-size: 11px; text-transform: uppercase; color: #666; border-bottom: 2px solid #ddd;">Qty</th>
-                                <th style="padding: 8px 12px; text-align: right; font-size: 11px; text-transform: uppercase; color: #666; border-bottom: 2px solid #ddd;">Price</th>
-                                <th style="padding: 8px 12px; text-align: right; font-size: 11px; text-transform: uppercase; color: #666; border-bottom: 2px solid #ddd;">Discount</th>
-                                <th style="padding: 8px 12px; text-align: right; font-size: 11px; text-transform: uppercase; color: #666; border-bottom: 2px solid #ddd;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Payment Summary - FIXED -->
-                <div style="margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: flex-end;">
-                        <div style="width: 340px;">
-                            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0;">
-                                <span style="font-size: 13px; color: #666;">Subtotal</span>
-                                <span style="font-size: 13px; color: #333;">${formatCurrency(subtotal)}</span>
-                            </div>
-                            ${productDiscount > 0 ? `
-                                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0;">
-                                    <span style="font-size: 13px; color: #666;">Product Discounts</span>
-                                    <span style="font-size: 13px; color: #d4a843;">-${formatCurrency(productDiscount)}</span>
-                                </div>
-                            ` : ''}
-                            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0;">
-                                <span style="font-size: 13px; color: #666;">After Product Discount</span>
-                                <span style="font-size: 13px; color: #333;">${formatCurrency(subtotal - productDiscount)}</span>
-                            </div>
-                            ${additionalDiscountAmount > 0 ? `
-                                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0; background: #f0fdf4;">
-                                    <span style="font-size: 13px; color: #22c55e; font-weight: bold;">Additional Discount (${order.additionalDiscountPercentage || 0}%)</span>
-                                    <span style="font-size: 13px; color: #22c55e; font-weight: bold;">-${formatCurrency(additionalDiscountAmount)}</span>
-                                </div>
-                            ` : ''}
-                            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-top: 2px solid #333; margin-top: 4px;">
-                                <span style="font-size: 16px; font-weight: bold; color: #333;">Grand Total</span>
-                                <span style="font-size: 18px; font-weight: bold; color: #d4a843;">${formatCurrency(grandTotal)}</span>
-                            </div>
-                            
-                            <!-- FIXED: Payment Details Section - Shows actual paid amount -->
-                            <div style="border-top: 2px solid #d4a843; margin-top: 12px; padding-top: 12px;">
-                                <div style="display: flex; justify-content: space-between; padding: 4px 0;">
-                                    <span style="font-size: 12px; color: #666;">Payment Method</span>
-                                    <span style="font-size: 12px; color: #333;">${paymentMethodDisplay}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; padding: 4px 0;">
-                                    <span style="font-size: 12px; color: #666;">Payment Status</span>
-                                    <span style="font-size: 12px; font-weight: bold; color: ${paymentStatusColor};">
-                                        ${paymentStatusDisplay}
-                                    </span>
-                                </div>
-                                <!-- FIXED: Total Paid - Shows actual amount customer paid -->
-                                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0;">
-                                    <span style="font-size: 13px; color: #666; font-weight: bold;">Total Paid</span>
-                                    <span style="font-size: 13px; color: #22c55e; font-weight: bold;">${formatCurrency(paidAmount)}</span>
-                                </div>
-                                <!-- FIXED: Remaining Balance - Shows what's still owed -->
-                                <div style="display: flex; justify-content: space-between; padding: 6px 0;">
-                                    <span style="font-size: 13px; color: #666; font-weight: bold;">Remaining Balance</span>
-                                    <span style="font-size: 13px; color: ${remainingAmount > 0 ? '#eab308' : '#22c55e'}; font-weight: bold;">
-                                        ${formatCurrency(remainingAmount)}
-                                    </span>
-                                </div>
-                                ${order.referenceId ? `
-                                    <div style="display: flex; justify-content: space-between; padding: 4px 0;">
-                                        <span style="font-size: 12px; color: #666;">Reference ID</span>
-                                        <span style="font-size: 12px; color: #333;">${order.referenceId}</span>
-                                    </div>
-                                ` : ''}
-                            </div>
-                            
-                            ${paymentHistoryHtml}
-                        </div>
-                    </div>
-                </div>
-                
-                ${restorationInfo}
-                
-                <!-- Thank You Message -->
-                <div style="text-align: center; padding: 20px 0; border-top: 1px solid #eee;">
-                    <div style="font-size: 16px; font-weight: bold; color: #333;">
-                        Thank You for Your Order, ${order.userDetails.name}!
-                    </div>
-                    ${remainingAmount > 0 ? `
-                        <div style="font-size: 13px; color: #eab308; margin-top: 5px;">
-                            ⚠️ Remaining Balance: ${formatCurrency(remainingAmount)} - Please complete your payment.
-                        </div>
-                    ` : paidAmount > 0 ? `
-                        <div style="font-size: 13px; color: #22c55e; margin-top: 5px;">
-                            ✅ Payment Complete - Thank you!
-                        </div>
-                    ` : `
-                        <div style="font-size: 13px; color: #ef4444; margin-top: 5px;">
-                            ⏳ Payment Pending - Please complete your payment.
-                        </div>
-                    `}
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(container);
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        const canvas = await html2canvas(container, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff',
-            width: 794,
-            height: container.scrollHeight,
-        });
-        
-        document.body.removeChild(container);
-        
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'px',
-            format: 'a4',
-            hotfixes: ['px_scaling']
-        });
-        
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save(`Invoice_${displayInvoiceNumber}.pdf`);
-        
-        console.log('PDF downloaded successfully');
-    } catch (error) {
-        console.error('Error generating PDF:', error);
-        alert('Failed to generate PDF. Please try again.');
-    }
+    await generateInvoicePdf({
+      companyName: COMPANY_CONFIG.name,
+      tagline: 'PREMIUM FIREWORKS & CELEBRATIONS',
+      address: COMPANY_CONFIG?.address || '',
+      phone: COMPANY_CONFIG?.phone || '',
+      email: COMPANY_CONFIG?.email || '',
+      website: COMPANY_CONFIG?.website,
+      logoDataUrl: logoImageUrl,
+      invoiceNumber: displayInvoiceNumber,
+      date: formattedDate,
+      time: formattedTime,
+      customerName: order.userDetails.name,
+      customerContact: order.userDetails.contact,
+      customerAddress: `${order.userDetails.address}, ${order.userDetails.cityVillage}, ${order.userDetails.pincode}`,
+      paymentMethod: paymentMethodDisplay,
+      paymentStatus: paymentStatusDisplay,
+      paymentStatusColor: paymentStatusColor,
+      items: (order.items || []).map((item) => ({
+        name: item.productName,
+        category: item.category,
+        qty: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: (item.unitPrice - (item.discountedUnitPrice || item.unitPrice)) * item.quantity,
+        total: (item.discountedUnitPrice || item.unitPrice) * item.quantity,
+      })),
+      subtotal: subtotal,
+      productDiscount: productDiscount,
+      additionalDiscount: additionalDiscountAmount,
+      additionalDiscountLabel: `Additional Discount (${order.additionalDiscountPercentage || 0}%)`,
+      grandTotal: grandTotal,
+      paidAmount: paidAmount,
+      remainingAmount: remainingAmount,
+    }, `Invoice_${displayInvoiceNumber}.pdf`);
+
+    console.log('PDF downloaded successfully');
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    alert('Failed to generate PDF. Please try again.');
+  }
 };
 
 // ============ Status History Modal Component ============
