@@ -160,25 +160,27 @@ export async function generateInvoicePdf(data: InvoiceData, filename: string) {
     value: string,
     rowY: number,
     bold = false,
-    color: [number, number, number] = [26, 26, 46]
+    color: [number, number, number] = [26, 26, 46],
+    fontSize = 10,
+    labelColor: [number, number, number] = [107, 114, 128]
   ) => {
     pdf.setFont('helvetica', bold ? 'bold' : 'normal');
-    pdf.setFontSize(10);
-    pdf.setTextColor(107, 114, 128);
+    pdf.setFontSize(fontSize);
+    pdf.setTextColor(labelColor[0], labelColor[1], labelColor[2]);
     pdf.text(label, totalsX, rowY);
     pdf.setTextColor(color[0], color[1], color[2]);
     pdf.text(value, pageWidth - margin, rowY, { align: 'right' });
   };
 
-  printRow('Subtotal', `Rs ${data.subtotal.toFixed(2)}`, y);
-  y += 16;
+    printRow('Subtotal', `Rs ${data.subtotal.toFixed(2)}`, y, false, [0, 0, 0], 8, [0, 0, 0]);
+  y += 14;
   if (data.productDiscount > 0) {
-    printRow('Discount', `-Rs ${data.productDiscount.toFixed(2)}`, y, false, [239, 68, 68]);
-    y += 16;
+    printRow('Discount', `-Rs ${data.productDiscount.toFixed(2)}`, y, false, [0, 0, 0], 8, [0, 0, 0]);
+    y += 14;
   }
   if (data.additionalDiscount && data.additionalDiscount > 0) {
-    printRow(data.additionalDiscountLabel || 'Additional Discount', `-Rs ${data.additionalDiscount.toFixed(2)}`, y, false, [34, 197, 94]);
-    y += 16;
+    printRow(data.additionalDiscountLabel || 'Additional Discount', `-Rs ${data.additionalDiscount.toFixed(2)}`, y, false, [0, 0, 0], 8, [0, 0, 0]);
+    y += 14;
   }
   pdf.setDrawColor(212, 168, 67);
   pdf.line(totalsX, y, pageWidth - margin, y);
