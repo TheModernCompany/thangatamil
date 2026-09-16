@@ -133,13 +133,13 @@ export async function generateInvoicePdf(data: InvoiceData, filename: string) {
       fontStyle: 'bold',
       fontSize: 8,
     },
-    columnStyles: {
-      0: { halign: 'center', cellWidth: 24 },
+      columnStyles: {
+      0: { halign: 'center', cellWidth: 20 },
       1: { halign: 'left' },
-      2: { halign: 'right', cellWidth: 60 },
-      3: { halign: 'center', cellWidth: 32 },
-      4: { halign: 'right', cellWidth: 60 },
-      5: { halign: 'right', cellWidth: 65, fontStyle: 'bold' },
+      2: { halign: 'right', cellWidth: 62, fontSize: 8 },
+      3: { halign: 'center', cellWidth: 22 },
+      4: { halign: 'right', cellWidth: 68, fontSize: 8 },
+      5: { halign: 'right', cellWidth: 62, fontStyle: 'bold', fontSize: 8 },
     },
     alternateRowStyles: { fillColor: [250, 250, 250] },
     theme: 'grid',
@@ -148,7 +148,7 @@ export async function generateInvoicePdf(data: InvoiceData, filename: string) {
   // ---- Totals — flows to a new page automatically if it doesn't fit ----
   // @ts-ignore - lastAutoTable is attached by the plugin at runtime
   let y = (pdf as any).lastAutoTable.finalY + 16;
-  const totalsBlockHeight = 160;
+  const totalsBlockHeight = 175;
   if (y + totalsBlockHeight > pageHeight - margin) {
     pdf.addPage();
     y = margin;
@@ -185,8 +185,21 @@ export async function generateInvoicePdf(data: InvoiceData, filename: string) {
   pdf.setDrawColor(212, 168, 67);
   pdf.line(totalsX, y, pageWidth - margin, y);
   y += 14;
-  printRow('Grand Total', `Rs ${data.grandTotal.toFixed(2)}`, y, true, [212, 168, 67]);
-  y += 20;
+    // ---- Grand Total: single prominent highlighted box ----
+  const gtBoxWidth = 220;
+  const gtBoxHeight = 34;
+  const gtBoxX = pageWidth - margin - gtBoxWidth;
+  pdf.setFillColor(255, 251, 235);
+  pdf.setDrawColor(212, 168, 67);
+  pdf.setLineWidth(1.2);
+  pdf.roundedRect(gtBoxX, y - 16, gtBoxWidth, gtBoxHeight, 4, 4, 'FD');
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(11);
+  pdf.setTextColor(212, 168, 67);
+  pdf.text('Grand Total', gtBoxX + 10, y + 2);
+  pdf.setFontSize(18);
+  pdf.text(`Rs ${data.grandTotal.toFixed(2)}`, pageWidth - margin - 10, y + 3, { align: 'right' });
+  y += 34;
   printRow('Payment Status', data.paymentStatus, y, true, hexToRgb(data.paymentStatusColor));
   y += 16;
   printRow('Total Paid', `Rs ${data.paidAmount.toFixed(2)}`, y, true, [34, 197, 94]);

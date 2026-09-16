@@ -200,12 +200,21 @@ const generateBillPDF = async (bill: Bill) => {
       paymentMethod: paymentMethodDisplay,
       paymentStatus: paymentStatusDisplay,
       paymentStatusColor: paymentStatusColor,
-      items: bill.items.map((item) => ({
-        name: item.productName,
-        qty: item.quantity,
-        unitPrice: item.mrp,
-        total: item.total,
-      })),
+              items: (() => {
+        const totalDiscount = (bill.discount || 0) + (bill.customerDiscount || 0);
+        const discountRatio = bill.subtotal ? totalDiscount / bill.subtotal : 0;
+        return bill.items.map((item) => {
+          const lineSubtotal = item.mrp * item.quantity;
+          const lineDiscount = lineSubtotal * discountRatio;
+          return {
+            name: item.productName,
+            qty: item.quantity,
+            unitPrice: item.mrp,
+            discount: lineDiscount,
+            total: lineSubtotal - lineDiscount,
+          };
+        });
+      })(),
       subtotal: bill.subtotal || 0,
       productDiscount: bill.discount || 0,
       additionalDiscount: bill.customerDiscount || 0,
@@ -1338,19 +1347,32 @@ const AdminBilling: React.FC = () => {
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Product</th>
                         <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">MRP</th>
                         <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Qty</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Discount</th>
                         <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Total</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {selectedBill.items.map((item, i) => (
-                        <tr key={i}>
-                          <td className="px-4 py-2 text-center text-gray-500">{i+1}</td>
-                          <td className="px-4 py-2 text-gray-900">{item.productName}</td>
-                          <td className="px-4 py-2 text-right text-gray-600">₹{item.mrp.toFixed(2)}</td>
-                          <td className="px-4 py-2 text-center text-gray-600">{item.quantity}</td>
-                          <td className="px-4 py-2 text-right font-medium">₹{item.total.toFixed(2)}</td>
-                        </tr>
-                      ))}
+                      {(() => {
+                        const totalDiscount = (selectedBill.discount || 0) + (selectedBill.customerDiscount || 0);
+                        const discountRatio = selectedBill.subtotal ? totalDiscount / selectedBill.subtotal : 0;
+                        return selectedBill.items.map((item, i) => {
+                          const lineSubtotal = item.mrp * item.quantity;
+                          const lineDiscount = lineSubtotal * discountRatio;
+                          const lineTotal = lineSubtotal - lineDiscount;
+                          return (
+                            <tr key={i}>
+                              <td className="px-4 py-2 text-center text-gray-500">{i+1}</td>
+                              <td className="px-4 py-2 text-gray-900">{item.productName}</td>
+                              <td className="px-4 py-2 text-right text-gray-600">₹{item.mrp.toFixed(2)}</td>
+                              <td className="px-4 py-2 text-center text-gray-600">{item.quantity}</td>
+                              <td className="px-4 py-2 text-right text-red-500">
+                                {lineDiscount > 0 ? `-₹${lineDiscount.toFixed(2)}` : '-'}
+                              </td>
+                              <td className="px-4 py-2 text-right font-medium">₹{lineTotal.toFixed(2)}</td>
+                            </tr>
+                          );
+                        });
+                      })()}
                     </tbody>
                   </table>
                 </div>
