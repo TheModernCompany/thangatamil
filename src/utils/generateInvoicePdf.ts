@@ -134,10 +134,10 @@ export async function generateInvoicePdf(data: InvoiceData, filename: string) {
       fontSize: 8,
     },
       columnStyles: {
-      0: { halign: 'center', cellWidth: 20 },
+      0: { halign: 'center', cellWidth: 26 },
       1: { halign: 'left' },
       2: { halign: 'right', cellWidth: 62, fontSize: 8 },
-      3: { halign: 'center', cellWidth: 22 },
+      3: { halign: 'center', cellWidth: 26 },
       4: { halign: 'right', cellWidth: 68, fontSize: 8 },
       5: { halign: 'right', cellWidth: 62, fontStyle: 'bold', fontSize: 8 },
     },
