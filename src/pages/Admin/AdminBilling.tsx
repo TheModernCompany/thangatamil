@@ -200,21 +200,13 @@ const generateBillPDF = async (bill: Bill) => {
       paymentMethod: paymentMethodDisplay,
       paymentStatus: paymentStatusDisplay,
       paymentStatusColor: paymentStatusColor,
-              items: (() => {
-        const totalDiscount = (bill.discount || 0) + (bill.customerDiscount || 0);
-        const discountRatio = bill.subtotal ? totalDiscount / bill.subtotal : 0;
-        return bill.items.map((item) => {
-          const lineSubtotal = item.mrp * item.quantity;
-          const lineDiscount = lineSubtotal * discountRatio;
-          return {
-            name: item.productName,
-            qty: item.quantity,
-            unitPrice: item.mrp,
-            discount: lineDiscount,
-            total: lineSubtotal - lineDiscount,
-          };
-        });
-      })(),
+              items: bill.items.map((item) => ({
+        name: item.productName,
+        qty: item.quantity,
+        unitPrice: item.mrp,
+        discount: (item.mrp * item.quantity) - item.total,
+        total: item.total,
+      })),
       subtotal: bill.subtotal || 0,
       productDiscount: bill.discount || 0,
       additionalDiscount: bill.customerDiscount || 0,
@@ -353,12 +345,12 @@ const AdminBilling: React.FC = () => {
     setCartItems(prev => {
       const existing = prev.find(i => i.productId === product.id);
       if (existing) {
-        return prev.map(i => 
-          i.productId === product.id 
-            ? { 
-                ...i, 
+          return prev.map(i =>
+          i.productId === product.id
+            ? {
+                ...i,
                 quantity: i.quantity + quantity,
-                total: (i.quantity + quantity) * i.mrp 
+                total: i.total + (quantity * product.discountedPrice)
               }
             : i
         );
@@ -370,7 +362,7 @@ const AdminBilling: React.FC = () => {
           productName: product.name,
           quantity: quantity,
           mrp: product.price,
-          total: quantity * product.price
+          total: quantity * product.discountedPrice
         }
       ];
     });
@@ -392,7 +384,7 @@ const AdminBilling: React.FC = () => {
     setCartItems(prev => 
       prev.map(i => 
         i.productId === productId 
-          ? { ...i, quantity: newQuantity, total: newQuantity * i.mrp }
+          ? { ...i, quantity: newQuantity, total: newQuantity * (i.total / i.quantity) }
           : i
       )
     );
@@ -411,18 +403,26 @@ const AdminBilling: React.FC = () => {
   };
 
   // Calculate totals
-  const calcSubtotal = () => cartItems.reduce((s, i) => s + i.total, 0);
-  
+  // Subtotal = raw MRP total (matches old invoices' meaning of "Subtotal")
+  const calcSubtotal = () => cartItems.reduce((s, i) => s + (i.mrp * i.quantity), 0);
+
+  // What each product's own discount saved, summed across the cart
+  const calcProductDiscount = () => cartItems.reduce((s, i) => s + ((i.mrp * i.quantity) - i.total), 0);
+
+  // Post-product-discount subtotal — the base the manual ₹/% field applies against
+  const calcPostProductDiscountSubtotal = () => calcSubtotal() - calcProductDiscount();
+
   const calcDiscountAmount = () => {
-    const subtotal = calcSubtotal();
-    if (form.discountType === 'percentage') {
-      return (subtotal * form.discount) / 100;
-    }
-    return Math.min(form.discount, subtotal);
+    const base = calcPostProductDiscountSubtotal();
+    const manualDiscount = form.discountType === 'percentage'
+      ? (base * form.discount) / 100
+      : Math.min(form.discount, base);
+    // Combined discount line = product-level discount + manual extra discount
+    return calcProductDiscount() + manualDiscount;
   };
 
   const calcCustomerDiscount = () => {
-    const subtotal = calcSubtotal();
+    const subtotal = calcPostProductDiscountSubtotal();
     return selectedCustomer ? (subtotal * selectedCustomer.additionalDiscount) / 100 : 0;
   };
 
@@ -913,7 +913,12 @@ const AdminBilling: React.FC = () => {
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-medium text-gray-900 truncate">{item.productName}</div>
-                              <div className="text-xs text-gray-500">₹{item.mrp} × {item.quantity}</div>
+                                <div className="text-xs text-gray-500 flex items-center gap-1.5">
+                                {(item.total / item.quantity) < item.mrp && (
+                                  <span className="line-through text-gray-400">₹{item.mrp}</span>
+                                )}
+                                <span>₹{(item.total / item.quantity).toFixed(2)} × {item.quantity}</span>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
                               <div className="flex items-center gap-1">
@@ -1392,13 +1397,10 @@ const AdminBilling: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {(() => {
-                        const totalDiscount = (selectedBill.discount || 0) + (selectedBill.customerDiscount || 0);
-                        const discountRatio = selectedBill.subtotal ? totalDiscount / selectedBill.subtotal : 0;
+                        {(() => {
                         return selectedBill.items.map((item, i) => {
-                          const lineSubtotal = item.mrp * item.quantity;
-                          const lineDiscount = lineSubtotal * discountRatio;
-                          const lineTotal = lineSubtotal - lineDiscount;
+                          const lineDiscount = (item.mrp * item.quantity) - item.total;
+                          const lineTotal = item.total;
                           return (
                             <tr key={i}>
                               <td className="px-4 py-2 text-center text-gray-500">{i+1}</td>
