@@ -242,6 +242,7 @@ const AdminBilling: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [isNewBillOpen, setIsNewBillOpen] = useState(false);
+  const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -441,7 +442,7 @@ const AdminBilling: React.FC = () => {
   // ============================================
   // Bill Creation
   // ============================================
-  const handleCreateBill = async () => {
+    const handleCreateBill = async () => {
     if (!selectedCustomer) {
       alert('Please select a customer');
       return;
@@ -461,8 +462,8 @@ const AdminBilling: React.FC = () => {
     const remaining = Math.max(0, total - paidAmount);
     const status = paidAmount >= total ? 'paid' : paidAmount > 0 ? 'partial' : 'pending';
 
-    try {
-      const res = await axios.post(`${API_URL}/bills`, {
+     try {
+      const payload = {
         customerId: selectedCustomer.id,
         items: cartItems.map(i => ({
           productId: i.productId,
@@ -480,21 +481,35 @@ const AdminBilling: React.FC = () => {
         paymentMethod: form.paymentMethod,
         paymentStatus: status,
         notes: form.notes,
-      });
+      };
 
-      setBills([res.data, ...bills]);
+      const res = editingBillId
+        ? await axios.put(`${API_URL}/bills/${editingBillId}`, payload)
+        : await axios.post(`${API_URL}/bills`, payload);
+
+      if (editingBillId) {
+        setBills(bills.map(b => b.id === editingBillId ? res.data : b));
+      } else {
+        setBills([res.data, ...bills]);
+      }
+
+      const wasEditing = !!editingBillId;
       setIsNewBillOpen(false);
+      setEditingBillId(null);
       clearCart();
       setSelectedCustomer(null);
       setCustomerSearch('');
       setForm({ discount: 0, discountType: 'percentage', paymentMethod: 'cash', paidAmount: 0, notes: '' });
       fetchStats();
-      
-      if (confirm('✅ Bill created successfully! Would you like to download the PDF?')) {
+
+      const successMessage = wasEditing
+        ? '✅ Bill updated successfully! Would you like to download the PDF?'
+        : '✅ Bill created successfully! Would you like to download the PDF?';
+      if (confirm(successMessage)) {
         generateBillPDF(res.data);
       }
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to create bill');
+      alert(error.response?.data?.detail || (editingBillId ? 'Failed to update bill' : 'Failed to create bill'));
     } finally {
       setSubmitting(false);
     }
@@ -557,8 +572,33 @@ const AdminBilling: React.FC = () => {
   };
 
   const handleEditBill = (bill: Bill) => {
-    // Open edit in a separate modal or navigate
-    alert('Edit functionality - expand as needed');
+    setEditingBillId(bill.id);
+    setCartItems(bill.items.map(item => ({
+      productId: item.productId,
+      productName: item.productName,
+      quantity: item.quantity,
+      mrp: item.mrp,
+      total: item.total,
+    })));
+    setSelectedCustomer({
+      id: bill.customerId,
+      name: bill.customerName,
+      contact: bill.customerContact,
+      address: bill.customerAddress,
+      pincode: '',
+      cityVillage: '',
+      email: null,
+      additionalDiscount: bill.subtotal ? (bill.customerDiscount / bill.subtotal) * 100 : 0,
+      isActive: true,
+    });
+    setForm({
+      discount: bill.discount || 0,
+      discountType: 'fixed',
+      paymentMethod: bill.paymentMethod as 'cash' | 'online' | 'credit',
+      paidAmount: bill.paidAmount || 0,
+      notes: bill.notes || '',
+    });
+    setIsNewBillOpen(true);
   };
 
   const deleteBill = async (id: string) => {
@@ -646,11 +686,11 @@ const AdminBilling: React.FC = () => {
                 <FiFileText className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">New Bill</h2>
+                <h2 className="text-lg font-semibold text-gray-900">{editingBillId ? 'Edit Bill' : 'New Bill'}</h2>
                 <p className="text-xs text-gray-500">Select customer, add products, and generate invoice</p>
               </div>
             </div>
-            <button onClick={() => { setIsNewBillOpen(false); clearCart(); setSelectedCustomer(null); setCustomerSearch(''); }} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                        <button onClick={() => { setIsNewBillOpen(false); setEditingBillId(null); clearCart(); setSelectedCustomer(null); setCustomerSearch(''); }} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
               <FiX className="w-5 h-5 text-gray-500" />
             </button>
           </div>
@@ -1077,7 +1117,7 @@ const AdminBilling: React.FC = () => {
               {cartItems.length} item{cartItems.length > 1 ? 's' : ''} · Total: ₹{calcTotal().toFixed(2)}
             </div>
             <button
-              onClick={() => { setIsNewBillOpen(false); clearCart(); setSelectedCustomer(null); setCustomerSearch(''); }}
+                            onClick={() => { setIsNewBillOpen(false); setEditingBillId(null); clearCart(); setSelectedCustomer(null); setCustomerSearch(''); }}
               className="px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               Cancel
@@ -1100,7 +1140,7 @@ const AdminBilling: React.FC = () => {
           <p className="text-sm text-gray-500">Manage invoices and payments</p>
         </div>
         <button
-          onClick={() => { setIsNewBillOpen(true); clearCart(); setSelectedCustomer(null); setCustomerSearch(''); }}
+          onClick={() => { setIsNewBillOpen(true); setEditingBillId(null); clearCart(); setSelectedCustomer(null); setCustomerSearch(''); }}
           className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-colors text-sm font-medium shadow-lg shadow-blue-500/30"
         >
           <FiPlus className="w-4 h-4" />

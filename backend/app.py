@@ -2557,6 +2557,51 @@ async def create_bill(
         print(f"Error creating bill: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create bill: {str(e)}")
 
+@app.put("/api/bills/{bill_id}")
+async def update_bill(
+    bill_id: str,
+    bill_data: BillCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update an existing bill. Recalculates totals/items exactly like creation,
+    but does not touch payment_history or paid_amount history — only the
+    core bill content (customer, items, discount, totals, notes).
+    """
+    try:
+        existing_bill = db.query(Bill).filter(Bill.id == bill_id).first()
+        if not existing_bill:
+            raise HTTPException(status_code=404, detail="Bill not found")
+
+        customer = get_customer_from_db(bill_data.customerId, db)
+
+        existing_bill.customer_id = customer.id
+        existing_bill.customer_name = customer.name
+        existing_bill.customer_contact = customer.contact
+        existing_bill.customer_address = customer.address
+        existing_bill.items = [item.model_dump() for item in bill_data.items]
+        existing_bill.subtotal = bill_data.subtotal
+        existing_bill.discount = bill_data.discount
+        existing_bill.customer_discount = bill_data.customerDiscount
+        existing_bill.total = bill_data.total
+        existing_bill.paid_amount = bill_data.paidAmount
+        existing_bill.remaining_amount = bill_data.remainingAmount
+        existing_bill.payment_method = bill_data.paymentMethod
+        existing_bill.payment_status = BillStatus(bill_data.paymentStatus)
+        existing_bill.notes = bill_data.notes
+
+        db.commit()
+        db.refresh(existing_bill)
+
+        return existing_bill.to_dict()
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        print(f"Error updating bill: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update bill: {str(e)}")
+
 @app.get("/api/bills")
 async def get_bills(
     search: Optional[str] = Query(None, description="Search by bill number or customer name"),
